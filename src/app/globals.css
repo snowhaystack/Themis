@@ -1,0 +1,271 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+ * Themis — Modern Justice
+ * Dark default + light toggle, agent-gradient pipeline
+ * ============================================================ */
+
+:root {
+  /* DARK (default) */
+  --bg: 10 10 15;            /* #0A0A0F */
+  --bg-elev: 17 17 26;
+  --surface: 19 19 26;       /* #13131A */
+  --surface-hi: 26 26 38;
+  --surface-2: 30 30 46;
+  --border: 35 35 58;
+  --border-hi: 60 60 95;
+  --fg: 232 234 240;
+  --muted: 156 163 175;
+  --muted-2: 110 116 135;
+  --accent: 139 92 246;      /* violet-500 — bridge to brand */
+  --accent-hi: 167 139 250;
+
+  /* 4-agent gradient: cyan → violet → pink → amber */
+  --agent1: 34 211 238;      /* cyan-400 */
+  --agent2: 139 92 246;      /* violet-500 */
+  --agent3: 236 72 153;      /* pink-500 */
+  --agent4: 245 158 11;      /* amber-500 */
+
+  --success: 16 185 129;
+  --warning: 245 158 11;
+  --danger: 239 68 68;
+
+  color-scheme: dark;
+}
+
+html.light {
+  --bg: 250 250 252;
+  --bg-elev: 255 255 255;
+  --surface: 255 255 255;
+  --surface-hi: 244 244 250;
+  --surface-2: 237 237 244;
+  --border: 226 226 235;
+  --border-hi: 196 196 212;
+  --fg: 24 24 33;
+  --muted: 95 99 115;
+  --muted-2: 140 145 162;
+  --accent: 124 92 255;
+  --accent-hi: 99 60 235;
+  --agent1: 8 145 178;
+  --agent2: 124 58 237;
+  --agent3: 219 39 119;
+  --agent4: 217 119 6;
+  color-scheme: light;
+}
+
+html,
+body {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--fg));
+  font-family: Arial, Helvetica, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-image:
+    radial-gradient(40rem 30rem at 8% -10%, rgb(var(--agent2) / 0.18), transparent 60%),
+    radial-gradient(40rem 30rem at 100% 0%, rgb(var(--agent1) / 0.14), transparent 60%),
+    radial-gradient(36rem 28rem at 50% 120%, rgb(var(--agent3) / 0.10), transparent 60%);
+  background-attachment: fixed;
+}
+
+html.light body {
+  background-image:
+    radial-gradient(40rem 30rem at 8% -10%, rgb(var(--agent2) / 0.10), transparent 60%),
+    radial-gradient(40rem 30rem at 100% 0%, rgb(var(--agent1) / 0.10), transparent 60%),
+    radial-gradient(36rem 28rem at 50% 120%, rgb(var(--agent3) / 0.06), transparent 60%);
+}
+
+@layer components {
+  /* Glass card */
+  .card {
+    @apply rounded-2xl border border-border bg-surface/80 p-5 backdrop-blur-xl;
+  }
+  .card-tight {
+    @apply rounded-xl border border-border bg-surface/80 p-3 backdrop-blur-xl;
+  }
+  .glass {
+    @apply border border-border bg-surface/70 backdrop-blur-xl;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-[0.98];
+  }
+  .btn-primary {
+    @apply btn relative overflow-hidden bg-agent-gradient text-white shadow-glow;
+    background-size: 200% 100%;
+  }
+  .btn-primary:hover {
+    @apply shadow-glow-strong;
+    background-position: 100% 0;
+  }
+  .btn-ghost {
+    @apply btn border border-border bg-surface/60 text-fg hover:border-border-hi hover:bg-surface-hi;
+  }
+  .btn-icon {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface/60 text-muted transition hover:border-border-hi hover:bg-surface-hi hover:text-fg;
+  }
+
+  /* Chip */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-surface/60 px-2.5 py-1 text-[11px] font-medium text-muted backdrop-blur-xl;
+  }
+  .chip-accent {
+    @apply chip border-accent/40 bg-accent/10 text-accent-hi;
+  }
+
+  /* Option button */
+  .option-button {
+    @apply relative w-full overflow-hidden rounded-xl border border-border bg-surface/60 px-4 py-3 text-left text-sm text-fg backdrop-blur-xl transition-all duration-200 hover:-translate-y-[1px] hover:border-border-hi hover:bg-surface-hi;
+  }
+  .option-button.selected {
+    @apply border-transparent text-fg;
+    background-image:
+      linear-gradient(rgb(var(--surface) / 0.92), rgb(var(--surface) / 0.92)),
+      linear-gradient(90deg, rgb(var(--agent1)), rgb(var(--agent2)), rgb(var(--agent3)), rgb(var(--agent4)));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    border: 1px solid transparent;
+    box-shadow: 0 0 0 1px rgb(var(--agent2) / 0.5), 0 8px 24px -10px rgb(var(--agent2) / 0.45);
+  }
+
+  /* Sidebar item */
+  .nav-item {
+    @apply flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-muted transition hover:bg-surface-hi hover:text-fg;
+  }
+  .nav-item-active {
+    @apply nav-item bg-surface-hi text-fg;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    @apply bg-agent-gradient bg-clip-text text-transparent;
+    background-size: 200% 100%;
+    animation: gradient-shift 6s ease-in-out infinite;
+  }
+
+  /* Input */
+  .input {
+    @apply w-full rounded-lg border border-border bg-surface/60 px-3 py-2 text-sm text-fg placeholder:text-muted-2 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/20;
+  }
+}
+
+@layer utilities {
+  .ring-glow {
+    box-shadow: 0 0 0 1px rgb(var(--accent) / 0.5), 0 0 24px -4px rgb(var(--accent) / 0.5);
+  }
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent);
+    mask-image: linear-gradient(to bottom, black 70%, transparent);
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--border-hi) / 0.7);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--border-hi));
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+ * Print styles — Export PDF via browser dialog
+ * ============================================================ */
+@media print {
+  html,
+  body {
+    background: white !important;
+    color: #111 !important;
+    color-scheme: light;
+  }
+  body {
+    background-image: none !important;
+  }
+  /* Hide UI chrome */
+  header,
+  nav,
+  aside,
+  footer,
+  .print\:hidden,
+  button {
+    display: none !important;
+  }
+  /* Force light-friendly card backgrounds */
+  .card,
+  .card-tight,
+  .glass {
+    background: #fff !important;
+    border: 1px solid #d6d6e0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    page-break-inside: avoid;
+  }
+  .text-fg,
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: #0a0a0f !important;
+  }
+  .text-muted,
+  .text-muted-2 {
+    color: #4b5563 !important;
+  }
+  .text-accent-hi,
+  .text-accent {
+    color: #6d28d9 !important;
+  }
+  .text-gradient {
+    -webkit-text-fill-color: #6d28d9 !important;
+    color: #6d28d9 !important;
+    background: none !important;
+    animation: none !important;
+  }
+  /* Carbon hero rating colors readable on white */
+  .bg-emerald-500\/15 { background: #ecfdf5 !important; }
+  .bg-green-500\/15   { background: #f0fdf4 !important; }
+  .bg-yellow-500\/15  { background: #fefce8 !important; }
+  .bg-orange-500\/15  { background: #fff7ed !important; }
+  .bg-red-500\/15     { background: #fef2f2 !important; }
+  .text-emerald-300   { color: #047857 !important; }
+  .text-green-300     { color: #15803d !important; }
+  .text-yellow-300    { color: #a16207 !important; }
+  .text-orange-300    { color: #c2410c !important; }
+  .text-red-300       { color: #b91c1c !important; }
+  /* Progress bars */
+  .bg-agent-gradient,
+  .bg-agent1, .bg-agent2, .bg-agent3, .bg-agent4 {
+    background: #6d28d9 !important;
+  }
+  /* Page break after each top-level section */
+  main > section {
+    break-inside: avoid;
+  }
+  /* Hide elements explicitly hidden in print */
+  .no-print, .no-print\:hidden { display: none !important; }
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+}
