@@ -6,6 +6,11 @@ import Link from 'next/link'
 export function AuthButton() {
   const { data: session, status } = useSession()
 
+  async function handleLogout() {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    await signOut({ callbackUrl: '/' })
+  }
+
   if (status === 'loading') return null
 
   if (session?.user) {
@@ -30,7 +35,7 @@ export function AuthButton() {
             {session.user.name ?? session.user.email}
           </span>
           <button
-            onClick={() => signOut({ callbackUrl: '/' })}
+            onClick={handleLogout}
             className="text-xs font-medium text-muted hover:text-fg transition-colors px-2 py-1 rounded-md hover:bg-surface"
           >
             Esci
