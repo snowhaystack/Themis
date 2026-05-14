@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { BrandMark } from '@/components/brand/BrandMark'
+import { AuthButton } from '@/components/auth/AuthButton'
 
 interface Props {
   children: React.ReactNode
@@ -96,6 +97,8 @@ export function DashboardShell({
           </div>
 
           {headerActions}
+
+          <AuthButton />
 
           <ThemeToggle />
         </header>

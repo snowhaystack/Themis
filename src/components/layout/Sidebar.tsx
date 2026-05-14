@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { SessionSummary } from '@/app/api/sessions/route'
+import type { SessionSummary } from '@/shared/types/session-summary'
 import { BrandWordmark } from '@/components/brand/BrandMark'
 
 interface Props {

@@ -12,7 +12,7 @@ import {
   type ChatTurn,
   type Sector,
   type EmployeeRange,
-} from '@/lib/types'
+} from '@/shared/types'
 
 type Phase =
   | 'sector'

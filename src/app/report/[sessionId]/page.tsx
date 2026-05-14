@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { loadSession } from '@/lib/agents/orchestrator'
+import { loadSession } from '@/server/domain/analysis/agents/orchestrator'
 import { ReportView } from '@/components/report/ReportView'
 import { ReportTitle } from '@/components/report/ReportTitle'
 import { DashboardShell } from '@/components/layout/DashboardShell'

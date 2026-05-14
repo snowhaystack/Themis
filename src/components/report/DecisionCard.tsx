@@ -1,6 +1,6 @@
 'use client'
 
-import type { Decision } from '@/lib/types'
+import type { Decision } from '@/shared/types'
 
 interface Props {
   decision: Decision

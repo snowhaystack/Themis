@@ -1,7 +1,7 @@
 'use client'
 
-import type { AnalyzerOutput, ImpactLevel } from '@/lib/types'
-import { humanize } from '@/lib/utils/format'
+import type { AnalyzerOutput, ImpactLevel } from '@/shared/types'
+import { humanize } from '@/shared/utils/format'
 
 interface Props {
   analyzer: AnalyzerOutput
