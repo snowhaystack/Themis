@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { loadSession, saveSession } from '@/lib/agents/orchestrator'
-import { resolveUserFromRequest, GUEST_COOKIE, GUEST_COOKIE_MAX_AGE } from '@/lib/auth/session'
+import { resolveUserFromRequest } from '@/lib/auth/session'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -25,7 +25,7 @@ export async function GET(
       return NextResponse.json({ error: 'Missing sessionId' }, { status: 400 })
     }
 
-    const { user, newGuestId } = await resolveUserFromRequest(req)
+    const { user } = await resolveUserFromRequest(req)
     const record = await loadSession(sessionId)
 
     if (!record) {
@@ -39,19 +39,8 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Strip cost data for non-admin users
     const responseRecord = user.role === 'admin' ? record : stripCosts(record)
-
-    const res = NextResponse.json(responseRecord)
-    if (newGuestId) {
-      res.cookies.set(GUEST_COOKIE, newGuestId, {
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: GUEST_COOKIE_MAX_AGE,
-        path: '/',
-      })
-    }
-    return res
+    return NextResponse.json(responseRecord)
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[API /report] error:', msg)

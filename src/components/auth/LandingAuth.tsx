@@ -13,8 +13,22 @@ export function LandingAuth() {
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [guestLoading, setGuestLoading] = useState(false)
 
   useEffect(() => setMounted(true), [])
+
+  async function handleGuest() {
+    setGuestLoading(true)
+    try {
+      const res = await fetch('/api/auth/guest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+      const { guestId } = await res.json()
+      const result = await signIn('guest', { guestId, redirect: false })
+      if (result?.error) { setGuestLoading(false); return }
+      window.location.href = '/chat'
+    } catch {
+      setGuestLoading(false)
+    }
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -122,13 +136,13 @@ export function LandingAuth() {
                   <div className="relative flex justify-center text-xs text-muted"><span className="bg-surface px-2">oppure</span></div>
                 </div>
 
-                <a href="/api/auth/guest?redirect=/chat" className="btn-ghost w-full justify-center text-muted">
+                <button onClick={handleGuest} disabled={guestLoading} className="btn-ghost w-full justify-center text-muted">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
-                  Continua come ospite
-                </a>
+                  {guestLoading ? 'Accesso…' : 'Continua come ospite'}
+                </button>
               </>
             )}
 

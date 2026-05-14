@@ -5,7 +5,7 @@ import {
   listSessionIds,
 } from '@/lib/redis/client'
 import { listSessionIdsForUser } from '@/lib/redis/users'
-import { resolveUserFromRequest, GUEST_COOKIE, GUEST_COOKIE_MAX_AGE } from '@/lib/auth/session'
+import { resolveUserFromRequest } from '@/lib/auth/session'
 import type { SessionStatus } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -34,7 +34,7 @@ function titleFor(sector: string | null, size: string | null): string {
 
 export async function GET(req: NextRequest) {
   try {
-    const { user, newGuestId } = await resolveUserFromRequest(req)
+    const { user } = await resolveUserFromRequest(req)
 
     const url = new URL(req.url)
     const limitParam = Number(url.searchParams.get('limit') ?? '30')
@@ -73,16 +73,7 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    const res = NextResponse.json({ sessions: results })
-    if (newGuestId) {
-      res.cookies.set(GUEST_COOKIE, newGuestId, {
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: GUEST_COOKIE_MAX_AGE,
-        path: '/',
-      })
-    }
-    return res
+    return NextResponse.json({ sessions: results })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[API /sessions] error:', msg)
