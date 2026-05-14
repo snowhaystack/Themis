@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.env
+.env.local
+.env.*.local
+README.md
+PROJECT_SPEC.md
+.vscode
+.idea
+.DS_Store
+*.log
+coverage
+out
+docker
+scripts
