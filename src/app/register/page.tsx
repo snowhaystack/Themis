@@ -31,7 +31,7 @@ export default function RegisterPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error ?? 'Registrazione fallita')
+        setError(data.error ?? 'Registration failed')
         setLoading(false)
         return
       }
@@ -49,7 +49,7 @@ export default function RegisterPage() {
 
       router.push('/')
     } catch {
-      setError('Errore di rete, riprova')
+      setError('Network error, please try again')
     } finally {
       setLoading(false)
     }
@@ -61,11 +61,11 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-foreground">Crea un account</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Create an account</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Hai già un account?{' '}
+            Already have an account?{' '}
             <Link href="/login" className="text-primary hover:underline">
-              Accedi
+              Sign in
             </Link>
           </p>
         </div>
@@ -73,7 +73,7 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div suppressHydrationWarning>
             <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1">
-              Nome (opzionale)
+              Name (optional)
             </label>
             <input
               id="name"
@@ -81,7 +81,7 @@ export default function RegisterPage() {
               value={name}
               onChange={e => setName(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Mario Rossi"
+              placeholder="Jane Smith"
               suppressHydrationWarning
             />
           </div>
@@ -97,7 +97,7 @@ export default function RegisterPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="tu@esempio.it"
+              placeholder="you@example.com"
               suppressHydrationWarning
             />
           </div>
@@ -114,7 +114,7 @@ export default function RegisterPage() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Minimo 8 caratteri"
+              placeholder="At least 8 characters"
               suppressHydrationWarning
             />
           </div>
@@ -128,13 +128,13 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full py-2 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
           >
-            {loading ? 'Registrazione…' : 'Registrati'}
+            {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>
 
         <p className="text-center text-xs text-muted-foreground">
           <Link href="/" className="hover:underline">
-            Torna alla home
+            Back to home
           </Link>
         </p>
       </div>

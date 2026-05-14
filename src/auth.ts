@@ -1,7 +1,8 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
-import { getUserByEmail, verifyPassword, touchUser, getOrCreateGuestUser } from '@/lib/redis/users'
-import type { UserRole } from '@/lib/types/user'
+import { validate as isUUID } from 'uuid'
+import { getUserByEmail, verifyPassword, touchUser, getOrCreateGuestUser } from '@/server/domain/identity/users'
+import type { UserRole } from '@/shared/types/user'
 
 declare module 'next-auth' {
   interface User {
@@ -51,7 +52,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: { guestId: {} },
       async authorize(credentials) {
         const guestId = credentials?.guestId as string | undefined
-        if (!guestId) return null
+        if (!guestId || !isUUID(guestId)) return null
         const user = await getOrCreateGuestUser(guestId)
         await touchUser(user.id)
         return { id: user.id, email: user.email, name: user.name, role: user.role }

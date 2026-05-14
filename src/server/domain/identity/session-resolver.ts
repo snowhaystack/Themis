@@ -1,8 +1,7 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { getOrCreateGuestUser, touchUser } from '@/lib/redis/users'
-import { v4 as uuidv4 } from 'uuid'
-import type { UserRole } from '@/lib/types/user'
+import { touchUser } from '@/server/domain/identity/users'
+import type { UserRole } from '@/shared/types/user'
 
 export const GUEST_COOKIE = 'themis_guest'
 export const GUEST_COOKIE_MAX_AGE = 60 * 60 * 24 * 30
@@ -17,9 +16,16 @@ export interface ResolvedUser {
   user: CurrentUser
 }
 
+export class UnauthorizedError extends Error {
+  constructor() {
+    super('Unauthorized')
+    this.name = 'UnauthorizedError'
+  }
+}
+
 /**
- * Resolves the current user from NextAuth session.
- * All users (including guests) now have a proper session.
+ * Resolves the authenticated user from the NextAuth session.
+ * Throws UnauthorizedError if no valid session exists.
  */
 export async function resolveUserFromRequest(_req: NextRequest): Promise<ResolvedUser> {
   const session = await auth()
@@ -35,17 +41,9 @@ export async function resolveUserFromRequest(_req: NextRequest): Promise<Resolve
     }
   }
 
-  // Fallback: create an anonymous guest (only hit if a route is called without session)
-  const guestId = uuidv4()
-  const guestUser = await getOrCreateGuestUser(guestId)
-  return {
-    user: { id: guestUser.id, role: 'guest', isGuest: true },
-  }
+  throw new UnauthorizedError()
 }
 
-/**
- * Resolves the current user for Server Components (reads from next/headers).
- */
 export async function getCurrentUser(): Promise<CurrentUser> {
   const session = await auth()
 
@@ -59,4 +57,16 @@ export async function getCurrentUser(): Promise<CurrentUser> {
   }
 
   return { id: 'anonymous', role: 'guest', isGuest: true }
+}
+
+/**
+ * Unified error handler for API routes.
+ * Maps UnauthorizedError → 401, everything else → sanitized 500.
+ */
+export function apiError(err: unknown, label: string): NextResponse {
+  if (err instanceof UnauthorizedError) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  console.error(`[${label}]`, err)
+  return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
 }

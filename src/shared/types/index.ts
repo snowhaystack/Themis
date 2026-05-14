@@ -68,16 +68,16 @@ export const EmployeeRangeSchema = z.enum([
 export type EmployeeRange = z.infer<typeof EmployeeRangeSchema>
 
 export const ChatTurnSchema = z.object({
-  questionKey: z.string(),
-  question: z.string(),
-  selectedOptions: z.array(z.string()),
+  questionKey: z.string().max(50),
+  question: z.string().max(300),
+  selectedOptions: z.array(z.string().max(100)).max(10),
 })
 export type ChatTurn = z.infer<typeof ChatTurnSchema>
 
 export const ChatStateSchema = z.object({
   sector: SectorSchema,
   employeeRange: EmployeeRangeSchema,
-  history: z.array(ChatTurnSchema),
+  history: z.array(ChatTurnSchema).max(20),
 })
 export type ChatState = z.infer<typeof ChatStateSchema>
 
@@ -106,14 +106,14 @@ export type Role = z.infer<typeof RoleSchema>
 
 export const DisambiguatorOutputSchema = z.object({
   company: z.object({
-    sector: z.string(),
-    employeeCount: z.number().int().min(1),
+    sector: z.string().max(80),
+    employeeCount: z.number().int().min(1).max(500000),
     size: CompanySizeSchema,
   }),
-  useCases: z.array(z.string()).min(1),
-  activeUsers: z.number().int().min(1),
-  roles: z.array(RoleSchema).min(1),
-  conversationSummary: z.string().min(10),
+  useCases: z.array(z.string().max(80)).min(1).max(15),
+  activeUsers: z.number().int().min(1).max(100000),
+  roles: z.array(RoleSchema).min(1).max(20),
+  conversationSummary: z.string().min(10).max(1000),
 })
 export type DisambiguatorOutput = z.infer<typeof DisambiguatorOutputSchema>
 

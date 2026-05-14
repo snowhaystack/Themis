@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { UserRole } from '@/lib/types/user'
+import type { UserRole } from '@/shared/types/user'
 
 // ── RBAC helpers (pure functions, no Redis) ───────────────────────────────────
 function canViewAllSessions(role: UserRole): boolean {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { createUser, getUserByEmail } from '@/lib/redis/users'
+import { createUser, getUserByEmail } from '@/server/domain/identity/users'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -33,21 +33,19 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const user = await createUser({
-      email,
-      password,
-      name,
-      role: 'normal',
-      provider: 'credentials',
-    })
+    await createUser({ email, password, name, role: 'normal', provider: 'credentials' })
 
-    return NextResponse.json(
-      { ok: true, userId: user.id, email: user.email },
-      { status: 201 }
-    )
+    // Do not return the user ID — not needed by the client and leaks internal identifiers.
+    return NextResponse.json({ ok: true, email }, { status: 201 })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    console.error('[API /auth/register] error:', msg)
+    if (msg === 'EMAIL_TAKEN') {
+      return NextResponse.json(
+        { error: 'An account with this email already exists' },
+        { status: 409 }
+      )
+    }
+    console.error('[API /auth/register] error:', err)
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
   }
 }

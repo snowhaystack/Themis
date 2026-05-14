@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { SchemaType, type Schema } from '@google/generative-ai'
-import { generateJson } from '@/lib/gemini/client'
+import { generateJson } from '@/server/infrastructure/gemini/client'
 import {
   ChatOptionSchema,
   DisambiguatorOutputSchema,
@@ -8,7 +8,7 @@ import {
   type ChatState,
   EMPLOYEE_RANGES,
   type CompanySize,
-} from '@/lib/types'
+} from '@/shared/types'
 
 const ALLOWED_QUESTION_KEYS = [
   'use_cases',
@@ -123,10 +123,6 @@ CONSTRAINTS:
 
 Return ONLY valid JSON. Nothing else.`
 
-/* ============================================================
- *  Flat Zod schema with conditional validation
- * ============================================================ */
-
 const FlatDisambiguatorResponseSchema = z
   .object({
     done: z.boolean(),
@@ -147,10 +143,6 @@ const FlatDisambiguatorResponseSchema = z
   })
 
 type FlatDisambiguatorResponse = z.infer<typeof FlatDisambiguatorResponseSchema>
-
-/* ============================================================
- *  Gemini responseSchema — ALL question fields REQUIRED
- * ============================================================ */
 
 const DISAMBIGUATOR_RESPONSE_SCHEMA: Schema = {
   type: SchemaType.OBJECT,
@@ -196,12 +188,7 @@ const DISAMBIGUATOR_RESPONSE_SCHEMA: Schema = {
             employeeCount: { type: SchemaType.INTEGER },
             size: {
               type: SchemaType.STRING,
-              enum: [
-                'artigiano',
-                'piccola_azienda',
-                'media_azienda',
-                'enterprise',
-              ],
+              enum: ['artigiano', 'piccola_azienda', 'media_azienda', 'enterprise'],
             },
           },
           required: ['sector', 'employeeCount', 'size'],
@@ -232,13 +219,7 @@ const DISAMBIGUATOR_RESPONSE_SCHEMA: Schema = {
         },
         conversationSummary: { type: SchemaType.STRING },
       },
-      required: [
-        'company',
-        'useCases',
-        'activeUsers',
-        'roles',
-        'conversationSummary',
-      ],
+      required: ['company', 'useCases', 'activeUsers', 'roles', 'conversationSummary'],
     },
   },
   required: ['done', 'questionKey', 'question', 'options', 'multiSelect'],

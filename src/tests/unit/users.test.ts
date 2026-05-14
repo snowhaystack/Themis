@@ -37,6 +37,7 @@ const redisMock = {
     return sorted.slice(start, end).map(e => e.value)
   }),
   zcard: vi.fn(async (key: string) => (sortedSets[key]?.length ?? 0)),
+  expire: vi.fn(async () => 1),
   pipeline: vi.fn(() => {
     const ops: Array<() => Promise<unknown>> = []
     const pipe = {
@@ -74,7 +75,10 @@ const redisMock = {
   }),
 }
 
-vi.mock('@/lib/redis/client', () => ({ getRedis: () => redisMock }))
+vi.mock('@/server/infrastructure/redis/client', () => ({
+  getRedis: () => redisMock,
+  GUEST_USER_TTL_SECONDS: 30 * 24 * 60 * 60,
+}))
 
 // ── Import after mock ─────────────────────────────────────────────────────────
 import {
@@ -85,7 +89,7 @@ import {
   setUserRole,
   countUsers,
   getOrCreateGuestUser,
-} from '@/lib/redis/users'
+} from '@/server/domain/identity/users'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function clearStore() {

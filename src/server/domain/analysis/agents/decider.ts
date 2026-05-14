@@ -1,12 +1,12 @@
-import { generateJson } from '@/lib/gemini/client'
-import type { UsageCollector } from '@/lib/gemini/usage'
+import { generateJson } from '@/server/infrastructure/gemini/client'
+import type { UsageCollector } from '@/server/infrastructure/gemini/usage'
 import {
   DeciderOutputSchema,
   type DeciderOutput,
   type DisambiguatorOutput,
   type AnalyzerOutput,
-} from '@/lib/types'
-import { MODEL_CATALOG } from '@/lib/data/catalog'
+} from '@/shared/types'
+import { MODEL_CATALOG } from '@/server/domain/analysis/data/catalog'
 
 const SYSTEM = `You are AGENT 3 — DECISION-MAKER for an AI advisory system.
 

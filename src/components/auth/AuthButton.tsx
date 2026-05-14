@@ -38,7 +38,7 @@ export function AuthButton() {
             onClick={handleLogout}
             className="text-xs font-medium text-muted hover:text-fg transition-colors px-2 py-1 rounded-md hover:bg-surface"
           >
-            Esci
+            Sign out
           </button>
         </div>
       </div>
@@ -51,13 +51,13 @@ export function AuthButton() {
         href="/login"
         className="text-xs font-medium text-muted hover:text-fg transition-colors px-2 py-1 rounded-md hover:bg-surface"
       >
-        Accedi
+        Sign in
       </Link>
       <Link
         href="/register"
         className="text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors px-2.5 py-1 rounded-md"
       >
-        Registrati
+        Sign up
       </Link>
     </div>
   )

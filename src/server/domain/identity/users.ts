@@ -1,13 +1,13 @@
 import { v4 as uuidv4 } from 'uuid'
 import bcrypt from 'bcryptjs'
-import { getRedis } from './client'
+import { getRedis, GUEST_USER_TTL_SECONDS } from '@/server/infrastructure/redis/client'
 import {
   User,
   UserSchema,
   CreateUserInput,
   UserRole,
   AuthProvider,
-} from '@/lib/types/user'
+} from '@/shared/types/user'
 
 const USERS_INDEX_KEY = 'themis:users:index'
 
@@ -23,7 +23,6 @@ export function userSessionsKey(userId: string): string {
   return `themis:user:${userId}:sessions`
 }
 
-/** Persist a user hash and index it. */
 export async function saveUser(user: User): Promise<void> {
   const redis = getRedis()
   const key = userKey(user.id)
@@ -38,15 +37,30 @@ export async function saveUser(user: User): Promise<void> {
   if (user.name) flat.name = user.name
   if (user.passwordHash) flat.passwordHash = user.passwordHash
 
-  await redis
-    .multi()
-    .hset(key, flat)
-    .set(userEmailKey(user.email), user.id)
-    .zadd(USERS_INDEX_KEY, new Date(user.createdAt).getTime(), user.id)
-    .exec()
+  if (user.provider !== 'guest') {
+    // Atomically claim the email slot to prevent concurrent registration TOCTOU.
+    // SET NX returns 'OK' on success, null if key already exists.
+    const claimed = await redis.set(userEmailKey(user.email), user.id, 'NX')
+    if (!claimed) throw new Error('EMAIL_TAKEN')
+    await redis
+      .multi()
+      .hset(key, flat)
+      .zadd(USERS_INDEX_KEY, new Date(user.createdAt).getTime(), user.id)
+      .exec()
+  } else {
+    // Guest accounts: use a TTL so they auto-clean from Redis.
+    await redis
+      .multi()
+      .hset(key, flat)
+      .set(userEmailKey(user.email), user.id)
+      .zadd(USERS_INDEX_KEY, new Date(user.createdAt).getTime(), user.id)
+      .exec()
+    // Set TTL outside the transaction (not atomic but acceptable for cleanup purposes).
+    await redis.expire(key, GUEST_USER_TTL_SECONDS)
+    await redis.expire(userEmailKey(user.email), GUEST_USER_TTL_SECONDS)
+  }
 }
 
-/** Load a user by id. Returns null if not found or invalid. */
 export async function getUserById(id: string): Promise<User | null> {
   const raw = await getRedis().hgetall(userKey(id))
   if (!raw || !raw.id) return null
@@ -54,14 +68,12 @@ export async function getUserById(id: string): Promise<User | null> {
   return parsed.success ? parsed.data : null
 }
 
-/** Load a user by email. Returns null if not found. */
 export async function getUserByEmail(email: string): Promise<User | null> {
   const id = await getRedis().get(userEmailKey(email))
   if (!id) return null
   return getUserById(id)
 }
 
-/** Create and persist a new user. Throws if email already taken (for credentials). */
 export async function createUser(input: CreateUserInput): Promise<User> {
   const provider: AuthProvider = input.provider ?? 'credentials'
 
@@ -89,7 +101,6 @@ export async function createUser(input: CreateUserInput): Promise<User> {
   return user
 }
 
-/** Verify password for a credentials user. */
 export async function verifyPassword(
   user: User,
   plainPassword: string
@@ -98,30 +109,22 @@ export async function verifyPassword(
   return bcrypt.compare(plainPassword, user.passwordHash)
 }
 
-/** Update lastActiveAt timestamp. */
 export async function touchUser(userId: string): Promise<void> {
   await getRedis().hset(userKey(userId), 'lastActiveAt', new Date().toISOString())
 }
 
-/** Update user role. */
 export async function setUserRole(userId: string, role: UserRole): Promise<void> {
   await getRedis().hset(userKey(userId), 'role', role)
 }
 
-/** List all user IDs ordered by creation date (newest first). */
 export async function listUserIds(limit = 200): Promise<string[]> {
   return getRedis().zrevrange(USERS_INDEX_KEY, 0, Math.max(0, limit - 1))
 }
 
-/** Count total registered users (all roles). */
 export async function countUsers(): Promise<number> {
   return getRedis().zcard(USERS_INDEX_KEY)
 }
 
-/**
- * Users active in the last `windowMs` milliseconds.
- * "Active" = lastActiveAt within the window.
- */
 export async function countActiveUsers(windowMs = 7 * 24 * 60 * 60 * 1000): Promise<number> {
   const ids = await listUserIds(500)
   if (ids.length === 0) return 0
@@ -133,7 +136,6 @@ export async function countActiveUsers(windowMs = 7 * 24 * 60 * 60 * 1000): Prom
   return results.filter(([, val]) => typeof val === 'string' && val > cutoff).length
 }
 
-/** Associate a session with a user (sorted set, scored by createdAt). */
 export async function indexSessionForUser(
   userId: string,
   sessionId: string,
@@ -142,7 +144,13 @@ export async function indexSessionForUser(
   await getRedis().zadd(userSessionsKey(userId), createdAtMs, sessionId)
 }
 
-/** Get all session IDs for a user (newest first). */
+export async function deindexSessionForUser(
+  userId: string,
+  sessionId: string
+): Promise<void> {
+  await getRedis().zrem(userSessionsKey(userId), sessionId)
+}
+
 export async function listSessionIdsForUser(
   userId: string,
   limit = 50
@@ -154,7 +162,6 @@ export async function listSessionIdsForUser(
   )
 }
 
-/** Create or retrieve the guest user for a given guest UUID. */
 export async function getOrCreateGuestUser(guestId: string): Promise<User> {
   const existing = await getUserById(guestId)
   if (existing) return existing

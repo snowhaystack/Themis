@@ -1,11 +1,3 @@
-/**
- * Cross-provider model catalog.
- * Source of truth for pricing, carbon, and capabilities of every model
- * the Analyzer can recommend to the user.
- *
- * Update prices/carbon factors here — every downstream calc reads from this file.
- */
-
 export type ModelProvider = 'google' | 'anthropic' | 'openai'
 export type ModelTier = 'budget' | 'balanced' | 'premium'
 
@@ -14,22 +6,15 @@ export interface ModelInfo {
   name: string
   provider: ModelProvider
   tier: ModelTier
-  /** USD per 1M input tokens */
   inputPer1M: number
-  /** USD per 1M output tokens */
   outputPer1M: number
-  /** USD per 1M tokens, 50/50 blended (used in monthly cost estimate) */
   blendedPer1M: number
-  /** kg CO₂eq per 1000 tokens */
   carbonPer1KTokensKg: number
-  /** Tags used by the Analyzer to match use cases */
   bestFor: string[]
-  /** One-line product positioning */
   notes: string
 }
 
 export const MODEL_CATALOG: ModelInfo[] = [
-  // ─────── Google ───────
   {
     id: 'gemini-2.5-flash-lite',
     name: 'Gemini 2.5 Flash-Lite',
@@ -66,8 +51,6 @@ export const MODEL_CATALOG: ModelInfo[] = [
     bestFor: ['decisioni', 'sviluppo_software', 'reasoning', 'long_context'],
     notes: 'Largest Google context window (2M tokens). Best for deep reasoning.',
   },
-
-  // ─────── Anthropic ───────
   {
     id: 'claude-haiku-4-5',
     name: 'Claude Haiku 4.5',
@@ -104,8 +87,6 @@ export const MODEL_CATALOG: ModelInfo[] = [
     bestFor: ['decisioni', 'long_context', 'reasoning', 'research'],
     notes: 'Top-of-line Anthropic reasoning — 1M context. Premium-tier cost.',
   },
-
-  // ─────── OpenAI ───────
   {
     id: 'gpt-5-mini',
     name: 'GPT-5 Mini',
@@ -151,10 +132,6 @@ export function getModel(id: string): ModelInfo | undefined {
   return MODEL_CATALOG.find((m) => m.id === id)
 }
 
-/**
- * Return up to N cross-provider alternatives in the same tier as the primary.
- * Used by the Analyzer to suggest equivalents from different vendors.
- */
 export function findAlternatives(primaryId: string, n = 2): ModelInfo[] {
   const primary = getModel(primaryId)
   if (!primary) return []

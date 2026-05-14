@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { loadSession } from '@/lib/agents/orchestrator'
+import { loadSession } from '@/server/domain/analysis/agents/orchestrator'
 import {
   deindexSession,
   listSessionIds,
-} from '@/lib/redis/client'
-import { listSessionIdsForUser } from '@/lib/redis/users'
-import { resolveUserFromRequest } from '@/lib/auth/session'
-import type { SessionStatus } from '@/lib/types'
+} from '@/server/infrastructure/redis/client'
+import {
+  listSessionIdsForUser,
+  deindexSessionForUser,
+} from '@/server/domain/identity/users'
+import { resolveUserFromRequest, apiError } from '@/server/domain/identity/session-resolver'
+import type { SessionStatus } from '@/shared/types'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -27,7 +30,7 @@ export interface SessionSummary {
 function titleFor(sector: string | null, size: string | null): string {
   const niceSector = sector
     ? sector.charAt(0).toUpperCase() + sector.slice(1).replace(/_/g, ' ')
-    : 'Sessione'
+    : 'Session'
   const niceSize = size ? size.replace(/_/g, ' ') : ''
   return niceSize ? `${niceSector} · ${niceSize}` : niceSector
 }
@@ -42,7 +45,6 @@ export async function GET(req: NextRequest) {
       ? Math.min(100, Math.max(1, Math.floor(limitParam)))
       : 30
 
-    // Admin sees all sessions; others see only their own
     const ids =
       user.role === 'admin'
         ? await listSessionIds(limit)
@@ -53,7 +55,11 @@ export async function GET(req: NextRequest) {
     for (const id of ids) {
       const rec = await loadSession(id)
       if (!rec) {
+        // Lazily clean up stale index entries
         await deindexSession(id).catch(() => {})
+        if (user.role !== 'admin') {
+          await deindexSessionForUser(user.id, id).catch(() => {})
+        }
         continue
       }
       const company = rec.disambiguator?.company
@@ -75,8 +81,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ sessions: results })
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    console.error('[API /sessions] error:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiError(err, 'API /sessions')
   }
 }

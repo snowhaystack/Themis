@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { loadSession, saveSession } from '@/lib/agents/orchestrator'
-import { resolveUserFromRequest } from '@/lib/auth/session'
+import { loadSession, saveSession } from '@/server/domain/analysis/agents/orchestrator'
+import { resolveUserFromRequest, apiError } from '@/server/domain/identity/session-resolver'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -42,9 +42,7 @@ export async function GET(
     const responseRecord = user.role === 'admin' ? record : stripCosts(record)
     return NextResponse.json(responseRecord)
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    console.error('[API /report] error:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiError(err, 'API /report GET')
   }
 }
 
@@ -88,9 +86,7 @@ export async function PATCH(
     await saveSession({ ...record, reportName: parsed.data.reportName })
     return NextResponse.json({ ok: true, reportName: parsed.data.reportName })
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    console.error('[API /report PATCH] error:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiError(err, 'API /report PATCH')
   }
 }
 

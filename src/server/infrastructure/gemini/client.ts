@@ -17,8 +17,6 @@ export type GeminiModelName =
   | 'gemini-2.5-flash'
   | 'gemini-2.5-flash-lite'
   | 'gemini-2.5-pro'
-  // Alias "latest" — Google routes to the current best model in family.
-  // Più stabili sul long-tail (meno saturazione, meno regressioni sui prompt).
   | 'gemini-flash-latest'
   | 'gemini-pro-latest'
 
@@ -27,15 +25,12 @@ export interface GenerateJsonArgs<T> {
   systemInstruction: string
   prompt: string
   schema: z.ZodType<T>
-  /** JSON-Schema (subset Gemini) per forzare la struttura dell'output */
   responseSchema?: Schema
   temperature?: number
   maxOutputTokens?: number
   maxRetries?: number
-  /** Modello di fallback usato dopo l'ultimo tentativo se ancora transient-error */
   fallbackModel?: GeminiModelName
   label?: string
-  /** Optional usage tracker (used by the pipeline orchestrator). */
   collector?: UsageCollector
 }
 
@@ -51,10 +46,6 @@ function stripCodeFence(raw: string): string {
   return trimmed
 }
 
-/**
- * Errori "transient" lato Google (saturation, rate limit, server errors).
- * Per questi conviene aspettare di più e NON cambiare il prompt.
- */
 function isTransientError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err)
   return /\b(429|500|502|503|504|UNAVAILABLE|RESOURCE_EXHAUSTED|high demand|rate limit|overloaded|temporarily|quota)\b/i.test(
@@ -192,7 +183,6 @@ export async function generateJson<T>({
       }
 
       if (attempt >= maxRetries) {
-        // Ultimo tentativo: prova il modello di fallback
         if (fallbackModel && fallbackModel !== currentModel) {
           console.warn(
             `[${label}] passo al fallback model: ${fallbackModel}`
@@ -227,16 +217,12 @@ export async function generateJson<T>({
         break
       }
 
-      // Backoff
       const backoffMs = transient
-        ? 3000 * Math.pow(2, attempt) // 3s, 6s, 12s, 24s
-        : 600 * Math.pow(2, attempt) // 0.6s, 1.2s, 2.4s, 4.8s
+        ? 3000 * Math.pow(2, attempt)
+        : 600 * Math.pow(2, attempt)
       console.log(`[${label}] attesa ${backoffMs}ms prima del retry`)
       await sleep(backoffMs)
 
-      // Se è un errore di parse/schema, includiamo l'errore + raw response nel prompt
-      // per aiutare il modello al prossimo tentativo. Se è transient, non tocchiamo
-      // il prompt (non è colpa del modello).
       if (!transient && lastRaw) {
         currentPrompt = `${prompt}\n\n---\nIl tentativo precedente ha prodotto un output non valido.\nERRORE: ${msg}\nOUTPUT PRECEDENTE (primi 1200 char):\n${lastRaw.slice(0, 1200)}\n\nRiprova restituendo SOLO JSON valido, con TUTTI i campi richiesti popolati. Niente markdown, niente backtick, niente testo extra.`
       }

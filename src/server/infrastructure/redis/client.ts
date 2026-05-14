@@ -16,14 +16,15 @@ export function getRedis(): Redis {
   return _redis
 }
 
-export const SESSION_TTL_SECONDS = 60 * 60 // 1h
+export const SESSION_TTL_SECONDS = 4 * 60 * 60       // 4h for active/pending pipelines
+export const SESSION_TTL_DONE_SECONDS = 7 * 24 * 60 * 60  // 7 days for completed reports
 export const SESSIONS_INDEX_KEY = 'themis:sessions'
+export const GUEST_USER_TTL_SECONDS = 30 * 24 * 60 * 60   // 30 days for guest accounts
 
 export function sessionKey(sessionId: string): string {
   return `themis:session:${sessionId}`
 }
 
-/** Add a session to the sorted-set index, scored by createdAt. */
 export async function indexSession(
   sessionId: string,
   createdAtMs: number
@@ -31,12 +32,10 @@ export async function indexSession(
   await getRedis().zadd(SESSIONS_INDEX_KEY, createdAtMs, sessionId)
 }
 
-/** Remove a session from the index (e.g. on cleanup). */
 export async function deindexSession(sessionId: string): Promise<void> {
   await getRedis().zrem(SESSIONS_INDEX_KEY, sessionId)
 }
 
-/** Most recent session IDs, newest first. */
 export async function listSessionIds(limit = 50): Promise<string[]> {
   return getRedis().zrevrange(SESSIONS_INDEX_KEY, 0, Math.max(0, limit - 1))
 }

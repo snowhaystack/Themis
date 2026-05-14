@@ -4,17 +4,18 @@ import {
   indexSession,
   sessionKey,
   SESSION_TTL_SECONDS,
-} from '@/lib/redis/client'
-import { indexSessionForUser } from '@/lib/redis/users'
+  SESSION_TTL_DONE_SECONDS,
+} from '@/server/infrastructure/redis/client'
+import { indexSessionForUser } from '@/server/domain/identity/users'
 import {
   type DisambiguatorOutput,
   type SessionRecord,
   SessionRecordSchema,
-} from '@/lib/types'
+} from '@/shared/types'
 import { runAnalyzer } from './analyzer'
 import { runDecider } from './decider'
 import { runFormatter } from './formatter'
-import { createUsageCollector } from '@/lib/gemini/usage'
+import { createUsageCollector } from '@/server/infrastructure/gemini/usage'
 
 export async function loadSession(
   sessionId: string
@@ -34,11 +35,15 @@ export async function saveSession(record: SessionRecord): Promise<void> {
     ...record,
     updatedAt: new Date().toISOString(),
   }
+  // Completed/error sessions keep the full report for 7 days; active pipelines use 4h.
+  const ttl = record.status === 'done' || record.status === 'error'
+    ? SESSION_TTL_DONE_SECONDS
+    : SESSION_TTL_SECONDS
   await getRedis().set(
     sessionKey(record.sessionId),
     JSON.stringify(next),
     'EX',
-    SESSION_TTL_SECONDS
+    ttl
   )
 }
 
@@ -69,10 +74,6 @@ export async function createSession(
 
 export { deindexSession }
 
-/**
- * Pipeline 2→3→4. Aggiorna lo stato in Redis ad ogni passo.
- * Da invocare NON-awaited dall'API route (fire-and-forget).
- */
 export async function runPipeline(sessionId: string): Promise<void> {
   console.log(`[ORCH] start pipeline session=${sessionId}`)
   const start = Date.now()
@@ -83,37 +84,21 @@ export async function runPipeline(sessionId: string): Promise<void> {
       throw new Error('Sessione non trovata o priva di disambiguator output')
     }
 
-    // === FASE A: Analyzer ===
     await saveSession({ ...current, status: 'analyzing' })
     const analyzer = await runAnalyzer(current.disambiguator, collector)
     console.log(`[ORCH] analyzer done (${Date.now() - start}ms)`)
 
-    // === FASE B: Decider ===
     let withAnalyzer = await loadSession(sessionId)
     if (!withAnalyzer) throw new Error('Sessione persa durante analyze')
     await saveSession({ ...withAnalyzer, status: 'deciding', analyzer })
-    const decider = await runDecider(
-      current.disambiguator,
-      analyzer,
-      collector
-    )
+    const decider = await runDecider(current.disambiguator, analyzer, collector)
     console.log(`[ORCH] decider done (${Date.now() - start}ms)`)
 
-    // === FASE C: Formatter ===
     let withDecider = await loadSession(sessionId)
     if (!withDecider) throw new Error('Sessione persa durante decide')
-    await saveSession({
-      ...withDecider,
-      status: 'formatting',
-      analyzer,
-      decider,
-    })
+    await saveSession({ ...withDecider, status: 'formatting', analyzer, decider })
     const report = await runFormatter(
-      {
-        disambiguator: current.disambiguator,
-        analyzer,
-        decider,
-      },
+      { disambiguator: current.disambiguator, analyzer, decider },
       collector
     )
     console.log(`[ORCH] formatter done (${Date.now() - start}ms)`)

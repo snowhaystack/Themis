@@ -5,12 +5,12 @@ import { useEffect, useState } from 'react'
 interface AdminStats {
   totalRequests: number
   completedRequests: number
-  totalCostEur: number
-  costPerRequest: number
+  totalPipelineTokens: number
+  tokensPerRequest: number
+  totalProjectedClientSpendEur: number
   totalUsers: number
   activeUsersLast7d: number
   activeUsersLast30d: number
-  avgCostPerActiveUser: number
   roleCounts: { admin: number; normal: number; guest: number }
 }
 
@@ -34,6 +34,12 @@ function StatCard({
   )
 }
 
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`
+  return String(n)
+}
+
 export function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -53,7 +59,7 @@ export function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center py-24">
-        <p className="text-muted animate-pulse">Caricamento statistiche…</p>
+        <p className="text-muted animate-pulse">Loading stats…</p>
       </div>
     )
   }
@@ -61,7 +67,7 @@ export function AdminDashboard() {
   if (error || !stats) {
     return (
       <div className="flex flex-1 items-center justify-center py-24">
-        <p className="text-danger">Errore: {error ?? 'Dati non disponibili'}</p>
+        <p className="text-danger">Error: {error ?? 'Data unavailable'}</p>
       </div>
     )
   }
@@ -69,52 +75,65 @@ export function AdminDashboard() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-fg" style={{ letterSpacing: '-0.02em' }}>Dashboard Admin</h1>
-        <p className="text-sm text-muted mt-1">Statistiche aggregate della piattaforma</p>
+        <h1 className="text-2xl font-bold text-fg" style={{ letterSpacing: '-0.02em' }}>Admin Dashboard</h1>
+        <p className="text-sm text-muted mt-1">Aggregate platform statistics</p>
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-xs font-semibold text-muted uppercase tracking-wide">Richieste</h2>
+        <h2 className="text-xs font-semibold text-muted uppercase tracking-wide">Requests</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <StatCard label="Richieste totali" value={stats.totalRequests} />
+          <StatCard label="Total requests" value={stats.totalRequests} />
           <StatCard
-            label="Completate"
+            label="Completed"
             value={stats.completedRequests}
-            sub={`${stats.totalRequests > 0 ? Math.round((stats.completedRequests / stats.totalRequests) * 100) : 0}% del totale`}
+            sub={`${stats.totalRequests > 0 ? Math.round((stats.completedRequests / stats.totalRequests) * 100) : 0}% of total`}
           />
-          <StatCard label="In sospeso / errore" value={stats.totalRequests - stats.completedRequests} />
+          <StatCard label="Pending / error" value={stats.totalRequests - stats.completedRequests} />
         </div>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xs font-semibold text-muted uppercase tracking-wide">Costi di ragionamento</h2>
+        <h2 className="text-xs font-semibold text-muted uppercase tracking-wide">Platform usage (Gemini pipeline)</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <StatCard label="Costo totale stimato" value={`€ ${stats.totalCostEur.toFixed(2)}`} accent />
-          <StatCard label="Costo per richiesta" value={`€ ${stats.costPerRequest.toFixed(2)}`} sub="Media sulle richieste completate" />
-          <StatCard label="Costo medio/utente attivo" value={`€ ${stats.avgCostPerActiveUser.toFixed(2)}`} sub="Ultimi 30 giorni" />
+          <StatCard
+            label="Total pipeline tokens"
+            value={formatTokens(stats.totalPipelineTokens)}
+            sub="Actual tokens consumed by our pipeline"
+            accent
+          />
+          <StatCard
+            label="Tokens / completed request"
+            value={formatTokens(stats.tokensPerRequest)}
+            sub="Average across completed analyses"
+          />
+          <StatCard
+            label="Projected client AI spend"
+            value={`€ ${stats.totalProjectedClientSpendEur.toFixed(0)}`}
+            sub="Sum of annual AI budgets estimated for clients"
+          />
         </div>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xs font-semibold text-muted uppercase tracking-wide">Utenti</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Utenti totali" value={stats.totalUsers} />
-          <StatCard label="Attivi (7 gg)" value={stats.activeUsersLast7d} />
-          <StatCard label="Attivi (30 gg)" value={stats.activeUsersLast30d} />
+        <h2 className="text-xs font-semibold text-muted uppercase tracking-wide">Users</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <StatCard label="Total users" value={stats.totalUsers} />
+          <StatCard label="Active (7 days)" value={stats.activeUsersLast7d} />
+          <StatCard label="Active (30 days)" value={stats.activeUsersLast30d} />
         </div>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xs font-semibold text-muted uppercase tracking-wide">Distribuzione ruoli</h2>
+        <h2 className="text-xs font-semibold text-muted uppercase tracking-wide">Role distribution</h2>
         <div className="grid grid-cols-3 gap-4">
           <StatCard label="Admin" value={stats.roleCounts.admin} />
-          <StatCard label="Registrati (normal)" value={stats.roleCounts.normal} />
-          <StatCard label="Ospiti (guest)" value={stats.roleCounts.guest} />
+          <StatCard label="Registered (normal)" value={stats.roleCounts.normal} />
+          <StatCard label="Guests" value={stats.roleCounts.guest} />
         </div>
       </section>
 
       <p className="text-xs text-muted text-right">
-        I costi sono stime calcolate dall&apos;analizzatore AI sulla base dei modelli raccomandati.
+        Pipeline tokens = actual Gemini API usage. Projected client spend = AI budget estimated by the analyser for each client company.
       </p>
     </div>
   )

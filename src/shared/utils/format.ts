@@ -1,8 +1,3 @@
-/**
- * Convert snake_case / kebab-case identifiers into human-readable Title Case.
- * "data_analysis" → "Data Analysis"
- * "customer_support" → "Customer Support"
- */
 export function humanize(id: string): string {
   if (!id) return ''
   return id

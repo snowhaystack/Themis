@@ -1,11 +1,12 @@
 import { SchemaType, type Schema } from '@google/generative-ai'
-import { generateJson } from '@/lib/gemini/client'
+import { generateJson } from '@/server/infrastructure/gemini/client'
+import type { UsageCollector } from '@/server/infrastructure/gemini/usage'
 import {
   AnalyzerOutputSchema,
   type AnalyzerOutput,
   type DisambiguatorOutput,
   type CarbonRating,
-} from '@/lib/types'
+} from '@/shared/types'
 import {
   MODEL_CATALOG,
   MODEL_IDS,
@@ -14,8 +15,8 @@ import {
   estimateMonthlyTokensPerUser,
   getModel,
   findAlternatives,
-} from '@/lib/data/catalog'
-import { carbonRating } from '@/lib/data/carbon'
+} from '@/server/domain/analysis/data/catalog'
+import { carbonRating } from '@/server/domain/analysis/data/carbon'
 
 const SYSTEM = `You are AGENT 2 — ANALYZER for an AI advisory system.
 
@@ -131,10 +132,7 @@ const ANALYZER_RESPONSE_SCHEMA: Schema = {
           name: { type: SchemaType.STRING },
           description: { type: SchemaType.STRING },
           recommendedModel: MODEL_REC_SCHEMA,
-          alternativeModels: {
-            type: SchemaType.ARRAY,
-            items: MODEL_REC_SCHEMA,
-          },
+          alternativeModels: { type: SchemaType.ARRAY, items: MODEL_REC_SCHEMA },
           reliabilityScore: { type: SchemaType.NUMBER },
           rationale: { type: SchemaType.STRING },
           monthlyTokens: { type: SchemaType.NUMBER },
@@ -142,25 +140,12 @@ const ANALYZER_RESPONSE_SCHEMA: Schema = {
           annualCostEur: { type: SchemaType.NUMBER },
           monthlyCarbonKg: { type: SchemaType.NUMBER },
           annualCarbonKg: { type: SchemaType.NUMBER },
-          carbonRating: {
-            type: SchemaType.STRING,
-            enum: ['A', 'B', 'C', 'D', 'E'],
-          },
+          carbonRating: { type: SchemaType.STRING, enum: ['A', 'B', 'C', 'D', 'E'] },
         },
         required: [
-          'id',
-          'name',
-          'description',
-          'recommendedModel',
-          'alternativeModels',
-          'reliabilityScore',
-          'rationale',
-          'monthlyTokens',
-          'monthlyCostEur',
-          'annualCostEur',
-          'monthlyCarbonKg',
-          'annualCarbonKg',
-          'carbonRating',
+          'id', 'name', 'description', 'recommendedModel', 'alternativeModels',
+          'reliabilityScore', 'rationale', 'monthlyTokens', 'monthlyCostEur',
+          'annualCostEur', 'monthlyCarbonKg', 'annualCarbonKg', 'carbonRating',
         ],
       },
     },
@@ -173,30 +158,11 @@ const ANALYZER_RESPONSE_SCHEMA: Schema = {
           count: { type: SchemaType.INTEGER },
           monthlyTokens: { type: SchemaType.NUMBER },
           monthlyCostEur: { type: SchemaType.NUMBER },
-          estimatedImpact: {
-            type: SchemaType.STRING,
-            description:
-              'Single concrete sentence with a quantified expected outcome (e.g. "≈ 4 hours/week saved").',
-          },
-          impactRationale: {
-            type: SchemaType.STRING,
-            description:
-              'Single sentence explaining WHY this impact applies to this role.',
-          },
-          impactLevel: {
-            type: SchemaType.STRING,
-            enum: ['high', 'medium', 'low'],
-          },
+          estimatedImpact: { type: SchemaType.STRING, description: 'Single concrete sentence with a quantified expected outcome.' },
+          impactRationale: { type: SchemaType.STRING, description: 'Single sentence explaining WHY this impact applies to this role.' },
+          impactLevel: { type: SchemaType.STRING, enum: ['high', 'medium', 'low'] },
         },
-        required: [
-          'role',
-          'count',
-          'monthlyTokens',
-          'monthlyCostEur',
-          'estimatedImpact',
-          'impactRationale',
-          'impactLevel',
-        ],
+        required: ['role', 'count', 'monthlyTokens', 'monthlyCostEur', 'estimatedImpact', 'impactRationale', 'impactLevel'],
       },
     },
     totals: {
@@ -207,19 +173,9 @@ const ANALYZER_RESPONSE_SCHEMA: Schema = {
         annualCostEur: { type: SchemaType.NUMBER },
         monthlyCarbonKg: { type: SchemaType.NUMBER },
         annualCarbonKg: { type: SchemaType.NUMBER },
-        overallCarbonRating: {
-          type: SchemaType.STRING,
-          enum: ['A', 'B', 'C', 'D', 'E'],
-        },
+        overallCarbonRating: { type: SchemaType.STRING, enum: ['A', 'B', 'C', 'D', 'E'] },
       },
-      required: [
-        'monthlyTokens',
-        'monthlyCostEur',
-        'annualCostEur',
-        'monthlyCarbonKg',
-        'annualCarbonKg',
-        'overallCarbonRating',
-      ],
+      required: ['monthlyTokens', 'monthlyCostEur', 'annualCostEur', 'monthlyCarbonKg', 'annualCarbonKg', 'overallCarbonRating'],
     },
     notes: { type: SchemaType.STRING },
   },
@@ -241,8 +197,6 @@ function totalMonthlyTokens(d: DisambiguatorOutput): {
   const total = byRole.reduce((s, x) => s + x.monthlyTokens, 0)
   return { total, byRole }
 }
-
-import type { UsageCollector } from '@/lib/gemini/usage'
 
 export async function runAnalyzer(
   d: DisambiguatorOutput,
@@ -286,7 +240,6 @@ Return ONE complete AnalyzerOutput JSON.`
   })
 }
 
-// Deterministic fallback if Gemini is unreachable.
 export function fallbackAnalyzer(d: DisambiguatorOutput): AnalyzerOutput {
   const { total, byRole } = totalMonthlyTokens(d)
   const primary = getModel('gemini-2.5-flash-lite')!
@@ -342,8 +295,7 @@ export function fallbackAnalyzer(d: DisambiguatorOutput): AnalyzerOutput {
         ((r.monthlyTokens / 1_000_000) * primary.blendedPer1M * EUR_USD_RATE).toFixed(4)
       ),
       estimatedImpact: 'Estimated 5-10% productivity gain on routine work.',
-      impactRationale:
-        'Fallback default: AI handles repetitive tasks for this role.',
+      impactRationale: 'Fallback default: AI handles repetitive tasks for this role.',
       impactLevel: 'medium' as const,
     })),
     totals: {

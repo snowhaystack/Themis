@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { UserRole } from '@/lib/types/user'
+import type { UserRole } from '@/shared/types/user'
 
 // Replicated from report route — pure logic, no I/O
 function canViewSession(role: UserRole, userId: string, sessionUserId: string | undefined): boolean {

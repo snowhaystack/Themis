@@ -1,9 +1,3 @@
-/**
- * Casi d'uso reali / benchmark indicativi.
- * Usati dal Formatter come fonte di ispirazione per arricchire il report.
- * Sono "esempi indicativi", presentati come tali nel report.
- */
-
 export interface BenchmarkCase {
   company: string
   sector: string
@@ -54,7 +48,7 @@ export const BENCHMARKS: BenchmarkCase[] = [
     source: 'Bayer R&D 2024',
   },
   {
-    company: 'L\'Oréal',
+    company: "L'Oréal",
     sector: 'retail',
     useCase: 'analisi_immagini',
     outcome:

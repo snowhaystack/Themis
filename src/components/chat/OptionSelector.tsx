@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { ChatOption } from '@/lib/types'
+import type { ChatOption } from '@/shared/types'
 
 interface Props {
   options: ChatOption[]
@@ -83,7 +83,7 @@ export function OptionSelector({
           onClick={() => onSubmit(selected)}
           className="btn-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Conferma ({selected.length})
+          Confirm ({selected.length})
         </button>
       )}
     </div>

@@ -1,14 +1,14 @@
-import { generateJson } from '@/lib/gemini/client'
-import type { UsageCollector } from '@/lib/gemini/usage'
+import { generateJson } from '@/server/infrastructure/gemini/client'
+import type { UsageCollector } from '@/server/infrastructure/gemini/usage'
 import {
   FinalReportSchema,
   type FinalReport,
   type DisambiguatorOutput,
   type AnalyzerOutput,
   type DeciderOutput,
-} from '@/lib/types'
-import { pickBenchmarks } from '@/lib/data/benchmarks'
-import { carbonEquivalents } from '@/lib/data/carbon'
+} from '@/shared/types'
+import { pickBenchmarks } from '@/server/domain/analysis/data/benchmarks'
+import { carbonEquivalents } from '@/shared/utils/carbon-display'
 
 const SYSTEM = `You are AGENT 4 — FORMATTER for an AI advisory system.
 

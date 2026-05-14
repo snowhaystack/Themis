@@ -1,10 +1,3 @@
-/**
- * Per-pipeline token usage collector.
- * The orchestrator creates one collector per run, passes it to every agent,
- * then stores the summary on the SessionRecord so the report can show
- * how many tokens were spent generating it.
- */
-
 export interface UsageEntry {
   agent: string
   model: string
