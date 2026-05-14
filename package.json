@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "create-admin": "tsx scripts/create-admin.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
@@ -34,10 +35,12 @@
     "@types/uuid": "^10.0.0",
     "@vitest/coverage-v8": "^4.1.6",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^17.4.2",
     "happy-dom": "^20.9.0",
     "playwright": "^1.60.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.16",
+    "tsx": "^4.22.0",
     "typescript": "^5.7.2",
     "vitest": "^4.1.6"
   }
