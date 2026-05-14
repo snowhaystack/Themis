@@ -315,6 +315,7 @@ export type PipelineUsage = z.infer<typeof PipelineUsageSchema>
 
 export const SessionRecordSchema = z.object({
   sessionId: z.string(),
+  userId: z.string().optional(),
   status: SessionStatusSchema,
   reportName: z.string().min(1).max(120).optional(),
   createdAt: z.string(),

@@ -5,6 +5,7 @@ import {
   sessionKey,
   SESSION_TTL_SECONDS,
 } from '@/lib/redis/client'
+import { indexSessionForUser } from '@/lib/redis/users'
 import {
   type DisambiguatorOutput,
   type SessionRecord,
@@ -44,11 +45,13 @@ export async function saveSession(record: SessionRecord): Promise<void> {
 export async function createSession(
   sessionId: string,
   disambiguator: DisambiguatorOutput,
-  reportName?: string
+  reportName?: string,
+  userId?: string
 ): Promise<SessionRecord> {
   const now = new Date().toISOString()
   const record: SessionRecord = {
     sessionId,
+    userId,
     status: 'analyzing',
     reportName,
     createdAt: now,
@@ -56,7 +59,11 @@ export async function createSession(
     disambiguator,
   }
   await saveSession(record)
-  await indexSession(sessionId, Date.parse(now))
+  const createdAtMs = Date.parse(now)
+  await indexSession(sessionId, createdAtMs)
+  if (userId) {
+    await indexSessionForUser(userId, sessionId, createdAtMs)
+  }
   return record
 }
 

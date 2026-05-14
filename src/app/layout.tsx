@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { ThemeProvider, themeInitScript } from '@/components/theme/ThemeProvider'
+import { SessionProvider } from '@/components/auth/SessionProvider'
 
 export const metadata: Metadata = {
   title: 'Themis — AI Advisor for Business',
@@ -27,7 +28,9 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-dvh bg-bg text-fg antialiased">
-        <ThemeProvider>{children}</ThemeProvider>
+        <SessionProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
   )

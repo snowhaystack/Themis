@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { loadSession } from '@/lib/agents/orchestrator'
 import {
   deindexSession,
   listSessionIds,
 } from '@/lib/redis/client'
+import { listSessionIdsForUser } from '@/lib/redis/users'
+import { resolveUserFromRequest, GUEST_COOKIE, GUEST_COOKIE_MAX_AGE } from '@/lib/auth/session'
 import type { SessionStatus } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -30,21 +32,27 @@ function titleFor(sector: string | null, size: string | null): string {
   return niceSize ? `${niceSector} · ${niceSize}` : niceSector
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
+    const { user, newGuestId } = await resolveUserFromRequest(req)
+
     const url = new URL(req.url)
     const limitParam = Number(url.searchParams.get('limit') ?? '30')
     const limit = Number.isFinite(limitParam)
       ? Math.min(100, Math.max(1, Math.floor(limitParam)))
       : 30
 
-    const ids = await listSessionIds(limit)
+    // Admin sees all sessions; others see only their own
+    const ids =
+      user.role === 'admin'
+        ? await listSessionIds(limit)
+        : await listSessionIdsForUser(user.id, limit)
+
     const results: SessionSummary[] = []
 
     for (const id of ids) {
       const rec = await loadSession(id)
       if (!rec) {
-        // session expired but still in index — clean it up
         await deindexSession(id).catch(() => {})
         continue
       }
@@ -65,7 +73,16 @@ export async function GET(req: Request) {
       })
     }
 
-    return NextResponse.json({ sessions: results })
+    const res = NextResponse.json({ sessions: results })
+    if (newGuestId) {
+      res.cookies.set(GUEST_COOKIE, newGuestId, {
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: GUEST_COOKIE_MAX_AGE,
+        path: '/',
+      })
+    }
+    return res
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[API /sessions] error:', msg)
