@@ -1,18 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
 export function LandingAuth() {
+  const [mounted, setMounted] = useState(false)
   const [tab, setTab] = useState<'choose' | 'login' | 'register'>('choose')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => setMounted(true), [])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -52,6 +55,8 @@ export function LandingAuth() {
   async function handleOAuth(provider: 'google' | 'github') {
     await signIn(provider, { callbackUrl: '/chat' })
   }
+
+  if (!mounted) return null
 
   return (
     <div className="relative min-h-dvh flex flex-col">

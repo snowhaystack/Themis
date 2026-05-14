@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -10,10 +10,13 @@ export default function LoginPage() {
   const params = useSearchParams()
   const callbackUrl = params.get('callbackUrl') ?? '/'
 
+  const [mounted, setMounted] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => setMounted(true), [])
 
   async function handleCredentials(e: React.FormEvent) {
     e.preventDefault()
@@ -35,6 +38,8 @@ export default function LoginPage() {
   async function handleOAuth(provider: 'google' | 'github') {
     await signIn(provider, { callbackUrl })
   }
+
+  if (!mounted) return null
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
