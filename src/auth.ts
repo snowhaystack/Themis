@@ -1,8 +1,6 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
-import Google from 'next-auth/providers/google'
-import GitHub from 'next-auth/providers/github'
-import { getUserByEmail, createUser, verifyPassword, touchUser } from '@/lib/redis/users'
+import { getUserByEmail, verifyPassword, touchUser } from '@/lib/redis/users'
 import type { UserRole } from '@/lib/types/user'
 
 declare module 'next-auth' {
@@ -47,36 +45,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return { id: user.id, email: user.email, name: user.name, role: user.role }
       },
     }),
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    }),
   ],
 
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === 'google' || account?.provider === 'github') {
-        if (!user.email) return false
-        let dbUser = await getUserByEmail(user.email)
-        if (!dbUser) {
-          dbUser = await createUser({
-            email: user.email,
-            name: user.name ?? undefined,
-            role: 'normal',
-            provider: account.provider as 'google' | 'github',
-          })
-        }
-        await touchUser(dbUser.id)
-        user.id = dbUser.id
-        user.role = dbUser.role
-      }
-      return true
-    },
-
     async jwt({ token, user }) {
       if (user) {
         token.userId = user.id
