@@ -71,7 +71,7 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div suppressHydrationWarning>
             <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1">
               Nome (opzionale)
             </label>
@@ -86,7 +86,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div>
+          <div suppressHydrationWarning>
             <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
               Email
             </label>
@@ -102,7 +102,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div>
+          <div suppressHydrationWarning>
             <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
               Password
             </label>

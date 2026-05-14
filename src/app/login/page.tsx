@@ -50,7 +50,7 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleCredentials} className="space-y-4">
-          <div>
+          <div suppressHydrationWarning>
             <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
               Email
             </label>
@@ -66,7 +66,7 @@ export default function LoginPage() {
             />
           </div>
 
-          <div>
+          <div suppressHydrationWarning>
             <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
               Password
             </label>
