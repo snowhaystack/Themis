@@ -82,6 +82,7 @@ export default function RegisterPage() {
               onChange={e => setName(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Mario Rossi"
+              suppressHydrationWarning
             />
           </div>
 
@@ -97,6 +98,7 @@ export default function RegisterPage() {
               onChange={e => setEmail(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="tu@esempio.it"
+              suppressHydrationWarning
             />
           </div>
 
@@ -113,6 +115,7 @@ export default function RegisterPage() {
               onChange={e => setPassword(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Minimo 8 caratteri"
+              suppressHydrationWarning
             />
           </div>
 

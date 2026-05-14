@@ -197,8 +197,8 @@ export function LandingAuth() {
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-3">
-                  <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="input" />
-                  <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" className="input" />
+                  <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="input" suppressHydrationWarning />
+                  <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" className="input" suppressHydrationWarning />
                   {error && <p className="text-xs text-danger">{error}</p>}
                   <button type="submit" disabled={loading} className="btn-primary w-full">
                     {loading ? 'Accesso…' : 'Accedi'}
@@ -239,9 +239,9 @@ export function LandingAuth() {
                 </div>
 
                 <form onSubmit={handleRegister} className="space-y-3">
-                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Nome (opzionale)" className="input" />
-                  <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="input" />
-                  <input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="Password (min 8 caratteri)" className="input" />
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Nome (opzionale)" className="input" suppressHydrationWarning />
+                  <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="input" suppressHydrationWarning />
+                  <input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="Password (min 8 caratteri)" className="input" suppressHydrationWarning />
                   {error && <p className="text-xs text-danger">{error}</p>}
                   <button type="submit" disabled={loading} className="btn-primary w-full">
                     {loading ? 'Registrazione…' : 'Crea account'}
