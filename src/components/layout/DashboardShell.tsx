@@ -41,7 +41,7 @@ export function DashboardShell({
         activeAgent={activeAgent}
       />
 
-      <div className={`flex flex-1 flex-col ${sizingCls}`}>
+      <div className={`flex flex-1 flex-col lg:ml-72 ${sizingCls}`}>
         {/* Top bar */}
         <header className="sticky top-0 z-20 flex items-center gap-2 sm:gap-3 border-b border-border bg-bg/70 px-3 py-2 sm:px-6 sm:py-3 backdrop-blur-2xl">
           <button
