@@ -43,7 +43,7 @@ export function DashboardShell({
 
       <div className={`flex flex-1 flex-col ${sizingCls}`}>
         {/* Top bar */}
-        <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-bg/70 px-4 py-3 backdrop-blur-2xl sm:px-6">
+        <header className="sticky top-0 z-20 flex items-center gap-2 sm:gap-3 border-b border-border bg-bg/70 px-3 py-2 sm:px-6 sm:py-3 backdrop-blur-2xl">
           <button
             type="button"
             className="btn-icon lg:hidden"
@@ -72,12 +72,12 @@ export function DashboardShell({
             />
             <div className="min-w-0">
               <h1
-                className="truncate text-lg font-bold leading-none tracking-tight text-fg sm:text-xl"
+                className="truncate text-base font-bold leading-none tracking-tight text-fg sm:text-xl"
                 style={{ letterSpacing: '-0.01em' }}
               >
                 Themis
               </h1>
-              <p className="mt-1 truncate text-[11px] text-muted">
+              <p className="mt-0.5 sm:mt-1 hidden sm:block truncate text-[11px] text-muted">
                 AI Advisor for Business · 4-agent pipeline
               </p>
             </div>

@@ -52,13 +52,13 @@ function StatCard({
     success:  'bg-success/20 text-success',
   }
   return (
-    <div className={`rounded-2xl border p-5 space-y-3 backdrop-blur-xl transition-all hover:scale-[1.01] ${colorMap[color]}`}>
-      <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${iconMap[color]}`}>
+    <div className={`rounded-2xl border p-3 sm:p-5 space-y-2 sm:space-y-3 backdrop-blur-xl transition-all hover:scale-[1.01] ${colorMap[color]}`}>
+      <div className={`flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-xl ${iconMap[color]}`}>
         {icon}
       </div>
       <div>
-        <p className="text-[11px] font-medium uppercase tracking-wider text-muted">{label}</p>
-        <p className="mt-0.5 text-3xl font-bold tabular-nums text-fg" style={{ letterSpacing: '-0.03em' }}>{value}</p>
+        <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-muted">{label}</p>
+        <p className="mt-0.5 text-xl sm:text-3xl font-bold tabular-nums text-fg" style={{ letterSpacing: '-0.03em' }}>{value}</p>
         {sub && <p className="mt-1 text-[11px] text-muted">{sub}</p>}
       </div>
     </div>
@@ -111,7 +111,7 @@ export function AdminDashboard() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-5xl px-6 py-8 space-y-8 animate-fade-in-up">
+      <div className="mx-auto max-w-5xl px-3 py-4 sm:px-6 sm:py-8 space-y-6 sm:space-y-8 animate-fade-in-up">
 
         {/* Header */}
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -120,7 +120,7 @@ export function AdminDashboard() {
               <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-soft" />
               Live platform data
             </div>
-            <h1 className="text-3xl font-bold text-fg" style={{ letterSpacing: '-0.03em' }}>
+            <h1 className="text-2xl sm:text-3xl font-bold text-fg" style={{ letterSpacing: '-0.03em' }}>
               Platform <span className="text-gradient">Stats</span>
             </h1>
             <p className="mt-1 text-sm text-muted">Real-time usage metrics from the Themis pipeline</p>

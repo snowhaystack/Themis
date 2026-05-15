@@ -631,8 +631,8 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
           ref={scrollRef}
           className={`chat-scroll overflow-y-auto rounded-2xl border border-border bg-bg-elev/40 backdrop-blur-xl ${
             phase === 'orchestrating'
-              ? 'max-h-28 shrink-0 p-3'
-              : 'flex-1 min-h-0 p-4'
+              ? 'max-h-28 shrink-0 p-2 sm:p-3'
+              : 'flex-1 min-h-0 p-2.5 sm:p-4'
           }`}
         >
         <div className="space-y-4">
@@ -700,7 +700,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
 
       {/* Pipeline in progress — full-width panel that takes over the view */}
       {phase === 'orchestrating' && (
-        <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-accent/30 bg-bg-elev/60 p-5 backdrop-blur-xl ring-1 ring-accent/10">
+        <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-accent/30 bg-bg-elev/60 p-3 sm:p-5 backdrop-blur-xl ring-1 ring-accent/10">
           <div className="flex min-h-0 flex-1 flex-col gap-5">
             <div className="flex shrink-0 items-end justify-between gap-4">
               <div>
@@ -712,7 +712,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-gradient font-mono text-4xl font-semibold tabular-nums sm:text-5xl">
+                <div className="text-gradient font-mono text-2xl font-semibold tabular-nums sm:text-5xl">
                   {formatElapsed(elapsedMs)}
                 </div>
                 <p className="text-[10px] uppercase tracking-wider text-muted">
@@ -813,7 +813,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
         phase === 'employees' ||
         (phase === 'chatting' && currentQ && !currentQ.done) ||
         phase === 'naming') && (
-        <div className="shrink-0 rounded-2xl border border-accent/30 bg-accent/5 p-4 backdrop-blur-xl ring-1 ring-accent/10">
+        <div className="shrink-0 rounded-2xl border border-accent/30 bg-accent/5 p-3 sm:p-4 backdrop-blur-xl ring-1 ring-accent/10">
           <div className="mb-3 flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse-soft" />
             <span className="text-[11px] font-semibold uppercase tracking-wider text-accent-hi/70">

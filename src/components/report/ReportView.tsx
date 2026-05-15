@@ -45,7 +45,7 @@ function ProfileStat({
         {label}
       </p>
       <p
-        className={`mt-1 font-display text-xl font-semibold leading-tight ${
+        className={`mt-1 font-display text-base sm:text-xl font-semibold leading-tight ${
           emphasis ? 'text-gradient' : 'text-fg'
         }`}
       >
@@ -182,7 +182,7 @@ export function ReportView({
             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent-hi">
               Executive summary
             </p>
-            <h2 className="mt-1 font-display text-3xl font-semibold text-fg">
+            <h2 className="mt-1 font-display text-2xl sm:text-3xl font-semibold text-fg">
               Your AI plan
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-muted">
