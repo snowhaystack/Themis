@@ -30,7 +30,7 @@ mechanisms that keep the LLM output predictable.
 │  └──────┬──────┘              │  AGENT 2 → AGENT 3 → AGENT 4 │   │
 │         │                     │   ▲          ▲          ▲   │   │
 │         │                     │   │          │          │   │   │
-│         │   (returns         │   └──────────┴──────────┘   │   │
+│         │   (returns           │   └──────────┴──────────┘   │   │
 │         │   ChatResponse)     │       UsageCollector         │   │
 │         │                     └────────────┬──────────────┬─┘   │
 │         ▼                                  │              │     │
@@ -43,10 +43,10 @@ mechanisms that keep the LLM output predictable.
 
 Two distinct runtimes:
 
-- **AGENT 1 (Disambiguator)** is *synchronous & turn-based*. The browser calls
+- **AGENT 1 (Disambiguator)** is _synchronous & turn-based_. The browser calls
   `/api/chat` once per user answer. Each call invokes Gemini once and returns
   either the next closed-option question or a `done=true` profile.
-- **AGENT 2 / 3 / 4** are run by a *fire-and-forget* orchestrator triggered by
+- **AGENT 2 / 3 / 4** are run by a _fire-and-forget_ orchestrator triggered by
   `POST /api/orchestrate`. The browser starts the job, then polls
   `GET /api/report/[sessionId]` until `status === "done"`.
 
@@ -57,12 +57,12 @@ Two distinct runtimes:
 Each agent is a single Gemini call with a strict JSON schema (Zod + Gemini
 `responseSchema`).
 
-| # | Role | Model (primary / fallback) | Output | Why |
-|---|------|---------------------------|--------|-----|
-| 1 | **Disambiguator** | `gemini-flash-latest` / `gemini-2.5-flash-lite` | `ChatResponse` (next question OR final profile) | Closed-options conversational profiling |
-| 2 | **Analyzer**      | `gemini-pro-latest` / `gemini-2.5-pro`          | `AnalyzerOutput` (use cases, multi-provider recs, costs, carbon, per-role impact) | Heavy reasoning, structured numeric output |
-| 3 | **Decider**       | `gemini-pro-latest` / `gemini-2.5-pro`          | `DeciderOutput` (decisions, ROI, risks, carbon tips, mixed stack) | Synthesis with explicit trade-offs |
-| 4 | **Formatter**     | `gemini-flash-latest` / `gemini-2.5-flash-lite` | `FinalReport` (executive summary, typed sections, benchmarks) | Fast rendering of long text |
+| #   | Role              | Model (primary / fallback)                      | Output                                                                            | Why                                        |
+| --- | ----------------- | ----------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------ |
+| 1   | **Disambiguator** | `gemini-flash-latest` / `gemini-2.5-flash-lite` | `ChatResponse` (next question OR final profile)                                   | Closed-options conversational profiling    |
+| 2   | **Analyzer**      | `gemini-pro-latest` / `gemini-2.5-pro`          | `AnalyzerOutput` (use cases, multi-provider recs, costs, carbon, per-role impact) | Heavy reasoning, structured numeric output |
+| 3   | **Decider**       | `gemini-pro-latest` / `gemini-2.5-pro`          | `DeciderOutput` (decisions, ROI, risks, carbon tips, mixed stack)                 | Synthesis with explicit trade-offs         |
+| 4   | **Formatter**     | `gemini-flash-latest` / `gemini-2.5-flash-lite` | `FinalReport` (executive summary, typed sections, benchmarks)                     | Fast rendering of long text                |
 
 The orchestrator persists the partial state in Redis after each agent, so the
 client can render real-time progress (`analyzing → deciding → formatting → done`).
@@ -74,17 +74,17 @@ client can render real-time progress (`analyzing → deciding → formatting →
 The Analyzer doesn't only recommend Gemini. The full catalog lives in
 [`src/lib/data/catalog.ts`](src/lib/data/catalog.ts):
 
-| Provider | Tier      | Model               | Blended $ / 1M tok | kg CO₂ / 1k tok |
-|----------|-----------|---------------------|--------------------|-----------------|
-| Google   | budget    | gemini-2.5-flash-lite | 0.25             | 0.00015         |
-| Google   | balanced  | gemini-2.5-flash      | 1.40             | 0.0003          |
-| Google   | premium   | gemini-2.5-pro        | 5.625            | 0.0008          |
-| Anthropic| budget    | claude-haiku-4-5      | 3.00             | 0.00025         |
-| Anthropic| balanced  | claude-sonnet-4-6     | 9.00             | 0.0005          |
-| Anthropic| premium   | claude-opus-4-7       | 45.00            | 0.0015          |
-| OpenAI   | budget    | gpt-5-mini            | 1.125            | 0.0002          |
-| OpenAI   | balanced  | gpt-5                 | 5.625            | 0.0006          |
-| OpenAI   | premium   | gpt-5-pro             | 67.50            | 0.0025          |
+| Provider  | Tier     | Model                 | Blended $ / 1M tok | kg CO₂ / 1k tok |
+| --------- | -------- | --------------------- | ------------------ | --------------- |
+| Google    | budget   | gemini-2.5-flash-lite | 0.25               | 0.00015         |
+| Google    | balanced | gemini-2.5-flash      | 1.40               | 0.0003          |
+| Google    | premium  | gemini-2.5-pro        | 5.625              | 0.0008          |
+| Anthropic | budget   | claude-haiku-4-5      | 3.00               | 0.00025         |
+| Anthropic | balanced | claude-sonnet-4-6     | 9.00               | 0.0005          |
+| Anthropic | premium  | claude-opus-4-7       | 45.00              | 0.0015          |
+| OpenAI    | budget   | gpt-5-mini            | 1.125              | 0.0002          |
+| OpenAI    | balanced | gpt-5                 | 5.625              | 0.0006          |
+| OpenAI    | premium  | gpt-5-pro             | 67.50              | 0.0025          |
 
 For each use case the Analyzer picks **one primary + 1-2 cross-provider
 alternatives in the same tier**. The Decider can mix providers in the final
@@ -131,9 +131,9 @@ LLMs misbehave. The wrapper around Gemini in
    number types, etc.).
 3. **Zod validation** runs on every response. Failures are explicit.
 4. **Smart retries** distinguish two error families:
-   - *Transient* (`429 / 500 / 502 / 503 / 504 / RESOURCE_EXHAUSTED / "overloaded"`):
+   - _Transient_ (`429 / 500 / 502 / 503 / 504 / RESOURCE_EXHAUSTED / "overloaded"`):
      longer backoff (3s → 6s → 12s → 24s) and the prompt is **not** modified.
-   - *Parse/Schema*: shorter backoff (0.6s → 1.2s → 2.4s) and the failing raw
+   - _Parse/Schema_: shorter backoff (0.6s → 1.2s → 2.4s) and the failing raw
      response is fed back to the model in the next attempt with the error
      message.
 5. **Fallback model** after exhausting retries (e.g. `gemini-pro-latest` →
@@ -141,8 +141,8 @@ LLMs misbehave. The wrapper around Gemini in
 6. **Raw response logging** when validation fails — easy debugging in
    `docker compose logs app`.
 
-The Disambiguator uses an additional trick: its Zod schema is a *discriminated
-union* (`{ done: true | false, ... }`) but Gemini's responseSchema doesn't
+The Disambiguator uses an additional trick: its Zod schema is a _discriminated
+union_ (`{ done: true | false, ... }`) but Gemini's responseSchema doesn't
 support unions, so the agent uses a **flat all-fields-required schema** and a
 server-side post-processor converts it to the union shape.
 
@@ -176,7 +176,7 @@ No step except the report name accepts free input. This:
 Annual kg CO₂eq is converted to the **EU energy-efficiency A–E scale**:
 
 | Rating | Annual kg CO₂ |
-|--------|---------------|
+| ------ | ------------- |
 | A      | ≤ 50          |
 | B      | ≤ 200         |
 | C      | ≤ 500         |
@@ -234,15 +234,15 @@ user can see exactly how many tokens were spent generating their plan.
 
 ## 10. Tech stack reference
 
-| Layer        | Tech                                |
-|--------------|-------------------------------------|
-| Framework    | Next.js 15 (App Router, TS)         |
-| LLM          | Google Gemini via `@google/generative-ai` |
-| Validation   | Zod                                 |
-| Persistence  | Redis 7 (ioredis)                   |
-| Styling      | Tailwind v3 with custom design tokens |
-| Container    | Docker multi-stage (Next standalone) |
-| Deploy       | Vultr VPS via rsync + docker compose |
+| Layer       | Tech                                      |
+| ----------- | ----------------------------------------- |
+| Framework   | Next.js 15 (App Router, TS)               |
+| LLM         | Google Gemini via `@google/generative-ai` |
+| Validation  | Zod                                       |
+| Persistence | Redis 7 (ioredis)                         |
+| Styling     | Tailwind v3 with custom design tokens     |
+| Container   | Docker multi-stage (Next standalone)      |
+| Deploy      | Vultr VPS via rsync + docker compose      |
 
 ---
 
