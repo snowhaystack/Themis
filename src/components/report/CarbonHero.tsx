@@ -109,7 +109,7 @@ export function CarbonHero({ analyzer, rating }: Props) {
         </div>
 
         {/* Equivalences */}
-        <div className="grid w-full grid-cols-3 gap-3 lg:max-w-md">
+        <div className="grid w-full grid-cols-2 gap-3 lg:max-w-sm">
           <Equivalence
             icon="🚗"
             value={formatCount(eq.kmAuto, 'int')}
@@ -127,11 +127,6 @@ export function CarbonHero({ analyzer, rating }: Props) {
                 ? "days of 1 tree's absorption"
                 : 'trees / year'
             }
-          />
-          <Equivalence
-            icon="📱"
-            value={formatCount(eq.smartphoneCariche, 'int')}
-            unit="phone charges"
           />
         </div>
       </div>
