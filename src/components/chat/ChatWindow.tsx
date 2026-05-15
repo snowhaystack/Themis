@@ -599,7 +599,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
       {/* Message history — scrollable, shows completed conversation */}
       <div
         ref={scrollRef}
-        className="flex-1 min-h-0 overflow-y-auto rounded-2xl border border-border bg-bg-elev/40 p-4 backdrop-blur-xl"
+        className="chat-scroll flex-1 min-h-0 overflow-y-auto rounded-2xl border border-border bg-bg-elev/40 p-4 backdrop-blur-xl"
       >
         <div className="space-y-4">
           {messages.map((m) => (

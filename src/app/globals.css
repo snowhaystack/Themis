@@ -179,6 +179,27 @@ html.light body {
   background: rgb(var(--border-hi));
 }
 
+/* Chat message area — thinner scrollbar, inset 16px so it clears the
+   rounded-2xl corners instead of squaring off the top and bottom. */
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--border-hi) / 0.7) transparent;
+}
+.chat-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 16px 0;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: rgb(var(--border-hi) / 0.7);
+  border-radius: 999px;
+}
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--border-hi));
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
