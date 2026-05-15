@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { SchemaType, type Schema } from '@google/generative-ai'
 import { generateJson } from '@/server/infrastructure/gemini/client'
+import { createUsageCollector } from '@/server/infrastructure/gemini/usage'
 import {
   ChatOptionSchema,
   DisambiguatorOutputSchema,
@@ -289,6 +290,9 @@ Remember: ALWAYS populate questionKey, question, options, multiSelect even on th
 
 Return ONLY one JSON object matching the schema.`
 
+  const collector = createUsageCollector()
+  const started = Date.now()
+
   const flat = await generateJson<FlatDisambiguatorResponse>({
     model: 'gemini-flash-latest',
     fallbackModel: 'gemini-2.5-flash-lite',
@@ -299,7 +303,12 @@ Return ONLY one JSON object matching the schema.`
     temperature: 0.2,
     maxOutputTokens: 1500,
     label: 'AGENT1',
+    collector,
   })
 
-  return flatToChatResponse(flat)
+  const elapsedMs = Date.now() - started
+  const tokens = collector.summary().totals.total || undefined
+
+  const response = flatToChatResponse(flat)
+  return { ...response, elapsedMs, tokens } as ChatResponse
 }

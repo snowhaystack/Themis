@@ -8,7 +8,7 @@ export const runtime = 'nodejs'
 const RegisterSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  name: z.string().min(1).max(80).optional(),
+  name: z.string().max(80).optional().transform(v => v?.trim() || undefined),
 })
 
 export async function POST(req: NextRequest) {

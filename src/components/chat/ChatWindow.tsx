@@ -138,6 +138,26 @@ function formatHMS(ts: number): string {
   })
 }
 
+function AgentMeta({ elapsedMs, tokens }: { elapsedMs?: number; tokens?: number }) {
+  if (!elapsedMs && !tokens) return null
+  return (
+    <div className="mt-2 flex items-center gap-2.5 border-t border-border/40 pt-2 font-mono text-[10px] text-muted-2">
+      {elapsedMs !== undefined && (
+        <span className="flex items-center gap-1">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          {(elapsedMs / 1000).toFixed(1)}s
+        </span>
+      )}
+      {tokens !== undefined && tokens > 0 && (
+        <span className="flex items-center gap-1">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          {tokens.toLocaleString()} tok
+        </span>
+      )}
+    </div>
+  )
+}
+
 interface Props {
   onSessionCreated?: (sessionId: string) => void
   onAgentChange?: (agent: 1 | 2 | 3 | 4 | null) => void
@@ -154,16 +174,22 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
       id: 'm-0',
       role: 'agent',
       content: (
-        <div>
-          <p className="font-medium text-fg">
-            Hi 👋 — I'm <span className="text-gradient font-semibold">Themis</span>.
+        <div className="space-y-3">
+          <p className="font-semibold text-fg">
+            Hi 👋 — I&apos;m <span className="text-gradient">Themis</span>, your AI advisor.
           </p>
-          <p className="mt-1 text-sm text-muted">
-            I'll ask you a few multiple-choice questions and prepare a personalized
-            AI plan — recommended models across Google, Anthropic and OpenAI,
-            monthly &amp; annual costs, and environmental impact.
-            Start by telling me your <strong className="text-fg">industry sector</strong>.
+          <p className="text-sm text-muted leading-relaxed">
+            I&apos;ll ask you <strong className="text-fg">5–6 quick questions</strong> and produce a
+            personalised report with recommended AI models, monthly costs in €, and
+            an EU carbon rating (A–E) — in about 60 seconds.
           </p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            {['Google · Anthropic · OpenAI', '€ cost estimates', 'Carbon A–E'].map((tag) => (
+              <span key={tag} className="rounded-full bg-surface-hi px-2.5 py-1 text-[11px] font-medium text-muted">
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
       ),
     },
@@ -196,16 +222,22 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
     id: 'm-0',
     role: 'agent',
     content: (
-      <div>
-        <p className="font-medium text-fg">
-          Hi 👋 — I'm <span className="text-gradient font-semibold">Themis</span>.
+      <div className="space-y-3">
+        <p className="font-semibold text-fg">
+          Hi 👋 — I&apos;m <span className="text-gradient">Themis</span>, your AI advisor.
         </p>
-        <p className="mt-1 text-sm text-muted">
-          I'll ask you a few multiple-choice questions and prepare a personalized
-          AI plan — recommended models across Google, Anthropic and OpenAI,
-          monthly &amp; annual costs, and environmental impact.
-          Start by telling me your <strong className="text-fg">industry sector</strong>.
+        <p className="text-sm text-muted leading-relaxed">
+          I&apos;ll ask you <strong className="text-fg">5–6 quick questions</strong> and produce a
+          personalised report with recommended AI models, monthly costs in €, and
+          an EU carbon rating (A–E) — in about 60 seconds.
         </p>
+        <div className="flex flex-wrap gap-2 pt-1">
+          {['Google · Anthropic · OpenAI', '€ cost estimates', 'Carbon A–E'].map((tag) => (
+            <span key={tag} className="rounded-full bg-surface-hi px-2.5 py-1 text-[11px] font-medium text-muted">
+              {tag}
+            </span>
+          ))}
+        </div>
       </div>
     ),
   }
@@ -329,7 +361,12 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
       const data = (await res.json()) as ChatResponse
       setCurrentQ(data)
       if (!data.done) {
-        appendAgent(<p className="text-sm text-fg">{data.question}</p>)
+        appendAgent(
+          <div>
+            <p className="text-sm text-fg">{data.question}</p>
+            <AgentMeta elapsedMs={data.elapsedMs} tokens={data.tokens} />
+          </div>
+        )
       }
     } catch (err) {
       if (isAbort(err)) return
@@ -387,12 +424,18 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
             <p className="mt-1 text-xs text-muted">
               {data.output.conversationSummary}
             </p>
+            <AgentMeta elapsedMs={data.elapsedMs} tokens={data.tokens} />
           </div>
         )
         setPhase('naming')
       } else {
         setCurrentQ(data)
-        appendAgent(<p className="text-sm text-fg">{data.question}</p>)
+        appendAgent(
+          <div>
+            <p className="text-sm text-fg">{data.question}</p>
+            <AgentMeta elapsedMs={data.elapsedMs} tokens={data.tokens} />
+          </div>
+        )
       }
     } catch (err) {
       if (isAbort(err)) return
@@ -512,7 +555,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
 
   const totalEta = PIPELINE_STEPS.reduce((s, x) => s + x.etaSeconds, 0)
 
-  const showRestartButton = phase !== 'sector'
+  const showRestartButton = phase !== 'sector' && phase !== 'employees'
   const restartLabel =
     phase === 'orchestrating' ? 'Stop & start over' : 'New analysis'
   const handleRestart = () => {
@@ -553,90 +596,248 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
         </div>
       )}
 
-      {/* messages — wrapped in a clipping container so the scroll edges are rounded */}
-      <div className="flex-1 min-h-0 overflow-hidden rounded-2xl border border-border bg-bg-elev/40 backdrop-blur-xl">
+      {/* Message history — scrollable, shows completed conversation */}
       <div
         ref={scrollRef}
-        className="h-full space-y-4 overflow-y-auto p-4 [mask-image:linear-gradient(to_bottom,transparent_0,black_12px,black_calc(100%-12px),transparent)]"
+        className="flex-1 min-h-0 overflow-y-auto rounded-2xl border border-border bg-bg-elev/40 p-4 backdrop-blur-xl"
       >
-        {messages.map((m) => (
-          <MessageBubble key={m.id} role={m.role}>
-            {m.content}
-          </MessageBubble>
-        ))}
+        <div className="space-y-4">
+          {messages.map((m) => (
+            <MessageBubble key={m.id} role={m.role}>
+              {m.content}
+            </MessageBubble>
+          ))}
 
-        {/* Step 1: select settore */}
-        {phase === 'sector' && (
-          <MessageBubble role="agent">
-            <p className="mb-3 text-sm text-fg">
-              Pick your industry sector:
-            </p>
-            <OptionSelector
-              multiSelect={false}
-              options={SECTORS.map((s) => ({
-                value: s,
-                label: SECTOR_LABELS[s],
-              }))}
-              onSubmit={(v) => {
-                const chosen = v[0] as Sector
-                setSector(chosen)
-                appendUser(SECTOR_LABELS[chosen])
-                setPhase('employees')
-                appendAgent(
-                  <p className="text-sm text-fg">
-                    Great. How many employees does the company have?
-                  </p>
-                )
-              }}
-            />
-          </MessageBubble>
-        )}
+          {/* Step 4: orchestrazione in corso */}
+          {phase === 'orchestrating' && (
+            <MessageBubble role="agent">
+              <div className="space-y-4">
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-fg">
+                      Preparing your report
+                    </p>
+                    <p className="mt-1 text-xs text-muted">
+                      Typical time: ~{totalEta}s · don't close this page
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-gradient font-mono text-3xl font-semibold tabular-nums">
+                      {formatElapsed(elapsedMs)}
+                    </div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted">
+                      elapsed
+                    </p>
+                  </div>
+                </div>
 
-        {/* Step 2: select dipendenti */}
-        {phase === 'employees' && sector && (
-          <MessageBubble role="agent">
-            <p className="mb-3 text-sm text-fg">Employee range:</p>
-            <OptionSelector
-              multiSelect={false}
-              options={EMPLOYEE_RANGES.map((r) => ({
-                value: r.value,
-                label: r.label,
-              }))}
-              onSubmit={(v) => {
-                const e = v[0] as EmployeeRange
-                setEmployeeRange(e)
-                const label =
-                  EMPLOYEE_RANGES.find((r) => r.value === e)?.label ?? e
-                appendUser(label)
-                void startConversation(sector, e)
-              }}
-            />
-          </MessageBubble>
-        )}
+                <div className="relative h-2 overflow-hidden rounded-full bg-surface-2">
+                  <div
+                    className="h-full rounded-full bg-agent-gradient transition-all duration-500"
+                    style={{
+                      width: `${Math.min(
+                        99,
+                        ((pipelineStep + 0.5) / PIPELINE_STEPS.length) * 100
+                      )}%`,
+                      backgroundSize: '200% 100%',
+                    }}
+                  />
+                  <div className="pointer-events-none absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent bg-[length:200%_100%]" />
+                </div>
 
-        {/* Step 3: domande disambiguatore */}
-        {phase === 'chatting' && currentQ && !currentQ.done && (
-          <MessageBubble role="agent">
+                <ol className="space-y-2">
+                  {PIPELINE_STEPS.map((s, i) => {
+                    const state =
+                      i < pipelineStep
+                        ? 'done'
+                        : i === pipelineStep
+                          ? 'active'
+                          : 'pending'
+                    const dotCls = STEP_DOT_BG[s.color]
+                    return (
+                      <li key={s.key} className="flex items-center gap-3 text-sm">
+                        <span
+                          className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold ring-1 transition ${
+                            state === 'done'
+                              ? `${dotCls} ring-transparent text-white`
+                              : state === 'active'
+                                ? `${dotCls} ring-transparent text-white shadow-glow-strong`
+                                : 'bg-surface-2 ring-border text-muted'
+                          }`}
+                        >
+                          {state === 'done' ? '✓' : i + 1}
+                        </span>
+                        <span className={`flex-1 ${state === 'pending' ? 'text-muted' : 'text-fg'}`}>
+                          {s.label}
+                        </span>
+                        <span className="font-mono text-[10px] text-muted-2">{s.agent}</span>
+                        <span className="text-xs text-muted">~{s.etaSeconds}s</span>
+                        {state === 'active' && (
+                          <span className={`ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full ${dotCls}`} />
+                        )}
+                      </li>
+                    )
+                  })}
+                </ol>
+
+                <div className="rounded-xl border border-border bg-bg/60 p-3 backdrop-blur-xl">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
+                      <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-success" />
+                      activity_log
+                    </p>
+                    <span className="text-[10px] text-muted-2">{logEntries.length} events</span>
+                  </div>
+                  <div
+                    ref={logScrollRef}
+                    className="max-h-44 space-y-1 overflow-y-auto font-mono text-[11px] leading-relaxed"
+                  >
+                    {logEntries.slice(-30).map((e, i) => {
+                      const colorCls =
+                        e.level === 'done'
+                          ? 'text-success'
+                          : e.agent === 2
+                            ? STEP_TEXT.agent2
+                            : e.agent === 3
+                              ? STEP_TEXT.agent3
+                              : e.agent === 4
+                                ? STEP_TEXT.agent4
+                                : e.level === 'event'
+                                  ? 'text-fg'
+                                  : 'text-muted'
+                      return (
+                        <div key={`${e.ts}-${i}`} className={`flex items-start gap-2 ${colorCls}`}>
+                          <span className="shrink-0 text-muted-2">{formatHMS(e.ts)}</span>
+                          <span className="break-words">{e.text}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </MessageBubble>
+          )}
+
+          {/* Errore */}
+          {phase === 'error' && (
+            <MessageBubble role="agent">
+              <p className="text-sm font-semibold text-danger">Something went wrong</p>
+              <p className="mt-1 text-xs text-muted">{errorMsg}</p>
+              <button className="btn-ghost mt-3" onClick={() => window.location.reload()}>
+                Restart
+              </button>
+            </MessageBubble>
+          )}
+
+          {/* Live API indicator */}
+          {pending && phase === 'chatting' && (
+            <div className="flex items-start gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-agent1/20">
+                <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-agent1 shadow-glow-strong" />
+              </div>
+              <div className="flex-1 rounded-xl border border-border bg-bg-elev/50 p-3 backdrop-blur-xl">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-agent1">
+                      AGENT1
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-2">gemini-flash-latest</span>
+                  </div>
+                  <span className="font-mono text-xs font-semibold tabular-nums text-fg">
+                    {(chatTickMs / 1000).toFixed(1)}s
+                  </span>
+                </div>
+                <div className="mt-1.5 flex items-center gap-2 font-mono text-[11px]">
+                  <span className="rounded bg-success/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-success">
+                    POST
+                  </span>
+                  <span className="text-fg">/api/chat</span>
+                  <span className="ml-auto inline-flex items-center gap-1">
+                    <span className="h-1 w-1 animate-pulse rounded-full bg-agent1" style={{ animationDelay: '0ms' }} />
+                    <span className="h-1 w-1 animate-pulse rounded-full bg-agent1" style={{ animationDelay: '200ms' }} />
+                    <span className="h-1 w-1 animate-pulse rounded-full bg-agent1" style={{ animationDelay: '400ms' }} />
+                  </span>
+                </div>
+                <p className="mt-1.5 text-[11px] text-muted">
+                  {chatTickMs < 1500
+                    ? '→ connecting to Google AI…'
+                    : chatTickMs < 4000
+                      ? '→ reading history · generating next question…'
+                      : chatTickMs < 8000
+                        ? '→ model reasoning · may take up to ~15s'
+                        : '→ still working · auto-retry on saturation'}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Action zone — always visible, no scroll needed to interact */}
+      {(phase === 'sector' ||
+        phase === 'employees' ||
+        (phase === 'chatting' && currentQ && !currentQ.done) ||
+        phase === 'naming') && (
+        <div className="shrink-0 rounded-2xl border border-accent/30 bg-accent/5 p-4 backdrop-blur-xl ring-1 ring-accent/10">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse-soft" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-accent-hi/70">
+              Your turn
+            </span>
+          </div>
+          {phase === 'sector' && (
+            <>
+              <p className="mb-3 text-sm font-medium text-fg">Pick your industry sector:</p>
+              <OptionSelector
+                multiSelect={false}
+                columns={3}
+                options={SECTORS.map((s) => ({ value: s, label: SECTOR_LABELS[s] }))}
+                onSubmit={(v) => {
+                  const chosen = v[0] as Sector
+                  setSector(chosen)
+                  appendUser(SECTOR_LABELS[chosen])
+                  setPhase('employees')
+                  appendAgent(
+                    <p className="text-sm text-fg">
+                      Great. How many employees does the company have?
+                    </p>
+                  )
+                }}
+              />
+            </>
+          )}
+
+          {phase === 'employees' && sector && (
+            <>
+              <p className="mb-3 text-sm font-medium text-fg">Employee range:</p>
+              <OptionSelector
+                multiSelect={false}
+                options={EMPLOYEE_RANGES.map((r) => ({ value: r.value, label: r.label }))}
+                onSubmit={(v) => {
+                  const e = v[0] as EmployeeRange
+                  setEmployeeRange(e)
+                  const label = EMPLOYEE_RANGES.find((r) => r.value === e)?.label ?? e
+                  appendUser(label)
+                  void startConversation(sector, e)
+                }}
+              />
+            </>
+          )}
+
+          {phase === 'chatting' && currentQ && !currentQ.done && (
             <OptionSelector
               multiSelect={currentQ.multiSelect}
               options={currentQ.options}
               onSubmit={submitAnswer}
               disabled={pending}
             />
-          </MessageBubble>
-        )}
+          )}
 
-        {/* Step 3.5: naming del report */}
-        {phase === 'naming' && disambiguatorOutput && (
-          <MessageBubble role="agent">
+          {phase === 'naming' && disambiguatorOutput && (
             <div className="space-y-3">
               <div>
-                <p className="text-sm font-medium text-fg">
-                  Name your report
-                </p>
-                <p className="mt-0.5 text-xs text-muted">
-                  Helps you find it later. You can always rename it.
-                </p>
+                <p className="text-sm font-medium text-fg">Name your report</p>
+                <p className="mt-0.5 text-xs text-muted">Helps you find it later. You can always rename it.</p>
               </div>
               <input
                 type="text"
@@ -644,10 +845,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
                 onChange={(e) => setReportName(e.target.value.slice(0, 120))}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && reportName.trim()) {
-                    void launchOrchestration(
-                      disambiguatorOutput,
-                      reportName.trim()
-                    )
+                    void launchOrchestration(disambiguatorOutput, reportName.trim())
                   }
                 }}
                 placeholder="e.g. AI Plan · Q3 2026"
@@ -656,232 +854,26 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
                 className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
               />
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] text-muted-2">
-                  {reportName.length}/120
-                </span>
+                <span className="text-[10px] text-muted-2">{reportName.length}/120</span>
                 <button
                   type="button"
                   disabled={!reportName.trim()}
-                  onClick={() =>
-                    void launchOrchestration(
-                      disambiguatorOutput,
-                      reportName.trim()
-                    )
-                  }
+                  onClick={() => void launchOrchestration(disambiguatorOutput, reportName.trim())}
                   className="btn-primary disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Generate report →
                 </button>
               </div>
             </div>
-          </MessageBubble>
-        )}
+          )}
+        </div>
+      )}
 
-        {/* Step 4: orchestrazione in corso */}
-        {phase === 'orchestrating' && (
-          <MessageBubble role="agent">
-            <div className="space-y-4">
-              {/* Header con timer */}
-              <div className="flex items-end justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-fg">
-                    Preparing your report
-                  </p>
-                  <p className="mt-1 text-xs text-muted">
-                    Typical time: ~{totalEta}s · don't close this page
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-gradient font-mono text-3xl font-semibold tabular-nums">
-                    {formatElapsed(elapsedMs)}
-                  </div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted">
-                    elapsed
-                  </p>
-                </div>
-              </div>
-
-              {/* Gradient progress bar */}
-              <div className="relative h-2 overflow-hidden rounded-full bg-surface-2">
-                <div
-                  className="h-full rounded-full bg-agent-gradient transition-all duration-500"
-                  style={{
-                    width: `${Math.min(
-                      99,
-                      ((pipelineStep + 0.5) / PIPELINE_STEPS.length) * 100
-                    )}%`,
-                    backgroundSize: '200% 100%',
-                  }}
-                />
-                <div className="pointer-events-none absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent bg-[length:200%_100%]" />
-              </div>
-
-              {/* Steps */}
-              <ol className="space-y-2">
-                {PIPELINE_STEPS.map((s, i) => {
-                  const state =
-                    i < pipelineStep
-                      ? 'done'
-                      : i === pipelineStep
-                        ? 'active'
-                        : 'pending'
-                  const dotCls = STEP_DOT_BG[s.color]
-                  return (
-                    <li
-                      key={s.key}
-                      className="flex items-center gap-3 text-sm"
-                    >
-                      <span
-                        className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold ring-1 transition ${
-                          state === 'done'
-                            ? `${dotCls} ring-transparent text-white`
-                            : state === 'active'
-                              ? `${dotCls} ring-transparent text-white shadow-glow-strong`
-                              : 'bg-surface-2 ring-border text-muted'
-                        }`}
-                      >
-                        {state === 'done' ? '✓' : i + 1}
-                      </span>
-                      <span
-                        className={`flex-1 ${
-                          state === 'pending' ? 'text-muted' : 'text-fg'
-                        }`}
-                      >
-                        {s.label}
-                      </span>
-                      <span className="font-mono text-[10px] text-muted-2">
-                        {s.agent}
-                      </span>
-                      <span className="text-xs text-muted">~{s.etaSeconds}s</span>
-                      {state === 'active' && (
-                        <span
-                          className={`ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full ${dotCls}`}
-                        />
-                      )}
-                    </li>
-                  )
-                })}
-              </ol>
-
-              {/* Activity feed */}
-              <div className="rounded-xl border border-border bg-bg/60 p-3 backdrop-blur-xl">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
-                    <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-success" />
-                    activity_log
-                  </p>
-                  <span className="text-[10px] text-muted-2">
-                    {logEntries.length} events
-                  </span>
-                </div>
-                <div
-                  ref={logScrollRef}
-                  className="max-h-44 space-y-1 overflow-y-auto font-mono text-[11px] leading-relaxed"
-                >
-                  {logEntries.slice(-30).map((e, i) => {
-                    const colorCls =
-                      e.level === 'done'
-                        ? 'text-success'
-                        : e.agent === 2
-                          ? STEP_TEXT.agent2
-                          : e.agent === 3
-                            ? STEP_TEXT.agent3
-                            : e.agent === 4
-                              ? STEP_TEXT.agent4
-                              : e.level === 'event'
-                                ? 'text-fg'
-                                : 'text-muted'
-                    return (
-                      <div
-                        key={`${e.ts}-${i}`}
-                        className={`flex items-start gap-2 ${colorCls}`}
-                      >
-                        <span className="shrink-0 text-muted-2">
-                          {formatHMS(e.ts)}
-                        </span>
-                        <span className="break-words">{e.text}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          </MessageBubble>
-        )}
-
-        {/* Errore */}
-        {phase === 'error' && (
-          <MessageBubble role="agent">
-            <p className="text-sm font-semibold text-danger">
-              Something went wrong
-            </p>
-            <p className="mt-1 text-xs text-muted">{errorMsg}</p>
-            <button
-              className="btn-ghost mt-3"
-              onClick={() => window.location.reload()}
-            >
-              Restart
-            </button>
-          </MessageBubble>
-        )}
-
-        {/* Live API indicator (sostituisce il vecchio "Sto pensando…") */}
-        {pending && phase === 'chatting' && (
-          <div className="flex items-start gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-agent1/20">
-              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-agent1 shadow-glow-strong" />
-            </div>
-            <div className="flex-1 rounded-xl border border-border bg-bg-elev/50 p-3 backdrop-blur-xl">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-agent1">
-                    AGENT1
-                  </span>
-                  <span className="font-mono text-[10px] text-muted-2">
-                    gemini-flash-latest
-                  </span>
-                </div>
-                <span className="font-mono text-xs font-semibold tabular-nums text-fg">
-                  {(chatTickMs / 1000).toFixed(1)}s
-                </span>
-              </div>
-              <div className="mt-1.5 flex items-center gap-2 font-mono text-[11px]">
-                <span className="rounded bg-success/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-success">
-                  POST
-                </span>
-                <span className="text-fg">/api/chat</span>
-                <span className="ml-auto inline-flex items-center gap-1">
-                  <span
-                    className="h-1 w-1 animate-pulse rounded-full bg-agent1"
-                    style={{ animationDelay: '0ms' }}
-                  />
-                  <span
-                    className="h-1 w-1 animate-pulse rounded-full bg-agent1"
-                    style={{ animationDelay: '200ms' }}
-                  />
-                  <span
-                    className="h-1 w-1 animate-pulse rounded-full bg-agent1"
-                    style={{ animationDelay: '400ms' }}
-                  />
-                </span>
-              </div>
-              <p className="mt-1.5 text-[11px] text-muted">
-                {chatTickMs < 1500
-                  ? '→ connecting to Google AI…'
-                  : chatTickMs < 4000
-                    ? '→ reading history · generating next question…'
-                    : chatTickMs < 8000
-                      ? '→ model reasoning · may take up to ~15s'
-                      : '→ still working · auto-retry on saturation'}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-      </div>
-
-      <div className="text-center text-[11px] text-muted-2">
-        Closed-options only — no step requires free-text input.
+      <div className="shrink-0 space-y-1 text-center text-[11px] text-muted-2">
+        <p>© {new Date().getFullYear()} Themis — Hackathon prototype · 4-agent Gemini pipeline</p>
+        <p className="leading-relaxed">
+          <span className="font-medium text-muted">Demo notice:</span> data is for demonstration purposes only, based on generic industry benchmarks. Sector analysis performs a live lookup on available market data — results may vary as data is updated.
+        </p>
       </div>
     </div>
   )

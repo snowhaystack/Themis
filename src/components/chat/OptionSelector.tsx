@@ -8,6 +8,7 @@ interface Props {
   multiSelect: boolean
   onSubmit: (values: string[]) => void
   disabled?: boolean
+  columns?: 2 | 3
 }
 
 export function OptionSelector({
@@ -15,6 +16,7 @@ export function OptionSelector({
   multiSelect,
   onSubmit,
   disabled,
+  columns = 2,
 }: Props) {
   const [selected, setSelected] = useState<string[]>([])
 
@@ -31,7 +33,7 @@ export function OptionSelector({
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className={`grid gap-2 ${columns === 3 ? 'grid-cols-2 sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
         {options.map((o) => {
           const isSel = selected.includes(o.value)
           return (
