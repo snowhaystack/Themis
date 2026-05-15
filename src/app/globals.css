@@ -200,6 +200,61 @@ html.light body {
   background: rgb(var(--border-hi));
 }
 
+/* ============================================================
+ * Sustainability accent — "linfa": sap flowing along a line.
+ * A dim base line with a bright green pulse travelling across it.
+ * ============================================================ */
+@keyframes sap-flow {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes sap-flow-v {
+  from {
+    background-position: 0 200%;
+  }
+  to {
+    background-position: 0 -200%;
+  }
+}
+.sap-line {
+  height: 2px;
+  border-radius: 999px;
+  background-color: rgb(var(--border-hi) / 0.35);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--success) / 0.95),
+    transparent
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: sap-flow 3.2s linear infinite;
+}
+.sap-line-v {
+  width: 2px;
+  border-radius: 999px;
+  background-color: rgb(var(--border-hi) / 0.35);
+  background-image: linear-gradient(
+    180deg,
+    transparent,
+    rgb(var(--success) / 0.95),
+    transparent
+  );
+  background-size: 100% 200%;
+  background-repeat: no-repeat;
+  animation: sap-flow-v 3.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sap-line,
+  .sap-line-v {
+    animation: none;
+  }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
