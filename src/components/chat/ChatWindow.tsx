@@ -596,10 +596,16 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
         </div>
       )}
 
-      {/* Message history — scrollable, shows completed conversation */}
+      {/* Message history — scrollable, shows completed conversation.
+          Compressed to a thin strip while the pipeline is running so the
+          orchestration panel below can take over. */}
       <div
         ref={scrollRef}
-        className="chat-scroll flex-1 min-h-0 overflow-y-auto rounded-2xl border border-border bg-bg-elev/40 p-4 backdrop-blur-xl"
+        className={`chat-scroll overflow-y-auto rounded-2xl border border-border bg-bg-elev/40 backdrop-blur-xl ${
+          phase === 'orchestrating'
+            ? 'max-h-28 shrink-0 p-3'
+            : 'flex-1 min-h-0 p-4'
+        }`}
       >
         <div className="space-y-4">
           {messages.map((m) => (
@@ -607,116 +613,6 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
               {m.content}
             </MessageBubble>
           ))}
-
-          {/* Step 4: orchestrazione in corso */}
-          {phase === 'orchestrating' && (
-            <MessageBubble role="agent">
-              <div className="space-y-4">
-                <div className="flex items-end justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-fg">
-                      Preparing your report
-                    </p>
-                    <p className="mt-1 text-xs text-muted">
-                      Typical time: ~{totalEta}s · don't close this page
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-gradient font-mono text-3xl font-semibold tabular-nums">
-                      {formatElapsed(elapsedMs)}
-                    </div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted">
-                      elapsed
-                    </p>
-                  </div>
-                </div>
-
-                <div className="relative h-2 overflow-hidden rounded-full bg-surface-2">
-                  <div
-                    className="h-full rounded-full bg-agent-gradient transition-all duration-500"
-                    style={{
-                      width: `${Math.min(
-                        99,
-                        ((pipelineStep + 0.5) / PIPELINE_STEPS.length) * 100
-                      )}%`,
-                      backgroundSize: '200% 100%',
-                    }}
-                  />
-                  <div className="pointer-events-none absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent bg-[length:200%_100%]" />
-                </div>
-
-                <ol className="space-y-2">
-                  {PIPELINE_STEPS.map((s, i) => {
-                    const state =
-                      i < pipelineStep
-                        ? 'done'
-                        : i === pipelineStep
-                          ? 'active'
-                          : 'pending'
-                    const dotCls = STEP_DOT_BG[s.color]
-                    return (
-                      <li key={s.key} className="flex items-center gap-3 text-sm">
-                        <span
-                          className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold ring-1 transition ${
-                            state === 'done'
-                              ? `${dotCls} ring-transparent text-white`
-                              : state === 'active'
-                                ? `${dotCls} ring-transparent text-white shadow-glow-strong`
-                                : 'bg-surface-2 ring-border text-muted'
-                          }`}
-                        >
-                          {state === 'done' ? '✓' : i + 1}
-                        </span>
-                        <span className={`flex-1 ${state === 'pending' ? 'text-muted' : 'text-fg'}`}>
-                          {s.label}
-                        </span>
-                        <span className="font-mono text-[10px] text-muted-2">{s.agent}</span>
-                        <span className="text-xs text-muted">~{s.etaSeconds}s</span>
-                        {state === 'active' && (
-                          <span className={`ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full ${dotCls}`} />
-                        )}
-                      </li>
-                    )
-                  })}
-                </ol>
-
-                <div className="rounded-xl border border-border bg-bg/60 p-3 backdrop-blur-xl">
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
-                      <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-success" />
-                      activity_log
-                    </p>
-                    <span className="text-[10px] text-muted-2">{logEntries.length} events</span>
-                  </div>
-                  <div
-                    ref={logScrollRef}
-                    className="max-h-44 space-y-1 overflow-y-auto font-mono text-[11px] leading-relaxed"
-                  >
-                    {logEntries.slice(-30).map((e, i) => {
-                      const colorCls =
-                        e.level === 'done'
-                          ? 'text-success'
-                          : e.agent === 2
-                            ? STEP_TEXT.agent2
-                            : e.agent === 3
-                              ? STEP_TEXT.agent3
-                              : e.agent === 4
-                                ? STEP_TEXT.agent4
-                                : e.level === 'event'
-                                  ? 'text-fg'
-                                  : 'text-muted'
-                      return (
-                        <div key={`${e.ts}-${i}`} className={`flex items-start gap-2 ${colorCls}`}>
-                          <span className="shrink-0 text-muted-2">{formatHMS(e.ts)}</span>
-                          <span className="break-words">{e.text}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            </MessageBubble>
-          )}
 
           {/* Errore */}
           {phase === 'error' && (
@@ -772,6 +668,116 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
           )}
         </div>
       </div>
+
+      {/* Pipeline in progress — full-width panel that takes over the view */}
+      {phase === 'orchestrating' && (
+        <div className="chat-scroll flex-1 min-h-0 overflow-y-auto rounded-2xl border border-accent/30 bg-bg-elev/60 p-5 backdrop-blur-xl ring-1 ring-accent/10">
+          <div className="space-y-5">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-base font-semibold text-fg">
+                  Preparing your report
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  Typical time: ~{totalEta}s · don't close this page
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-gradient font-mono text-4xl font-semibold tabular-nums sm:text-5xl">
+                  {formatElapsed(elapsedMs)}
+                </div>
+                <p className="text-[10px] uppercase tracking-wider text-muted">
+                  elapsed
+                </p>
+              </div>
+            </div>
+
+            <div className="relative h-2.5 overflow-hidden rounded-full bg-surface-2">
+              <div
+                className="h-full rounded-full bg-agent-gradient transition-all duration-500"
+                style={{
+                  width: `${Math.min(
+                    99,
+                    ((pipelineStep + 0.5) / PIPELINE_STEPS.length) * 100
+                  )}%`,
+                  backgroundSize: '200% 100%',
+                }}
+              />
+              <div className="pointer-events-none absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent bg-[length:200%_100%]" />
+            </div>
+
+            <ol className="space-y-2.5">
+              {PIPELINE_STEPS.map((s, i) => {
+                const state =
+                  i < pipelineStep
+                    ? 'done'
+                    : i === pipelineStep
+                      ? 'active'
+                      : 'pending'
+                const dotCls = STEP_DOT_BG[s.color]
+                return (
+                  <li key={s.key} className="flex items-center gap-3 text-sm">
+                    <span
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ring-1 transition ${
+                        state === 'done'
+                          ? `${dotCls} ring-transparent text-white`
+                          : state === 'active'
+                            ? `${dotCls} ring-transparent text-white shadow-glow-strong`
+                            : 'bg-surface-2 ring-border text-muted'
+                      }`}
+                    >
+                      {state === 'done' ? '✓' : i + 1}
+                    </span>
+                    <span className={`flex-1 ${state === 'pending' ? 'text-muted' : 'text-fg'}`}>
+                      {s.label}
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-2">{s.agent}</span>
+                    <span className="text-xs text-muted">~{s.etaSeconds}s</span>
+                    {state === 'active' && (
+                      <span className={`ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full ${dotCls}`} />
+                    )}
+                  </li>
+                )
+              })}
+            </ol>
+
+            <div className="rounded-xl border border-border bg-bg/60 p-3 backdrop-blur-xl">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
+                  <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-success" />
+                  activity_log
+                </p>
+                <span className="text-[10px] text-muted-2">{logEntries.length} events</span>
+              </div>
+              <div
+                ref={logScrollRef}
+                className="max-h-72 space-y-1 overflow-y-auto font-mono text-[11px] leading-relaxed"
+              >
+                {logEntries.slice(-40).map((e, i) => {
+                  const colorCls =
+                    e.level === 'done'
+                      ? 'text-success'
+                      : e.agent === 2
+                        ? STEP_TEXT.agent2
+                        : e.agent === 3
+                          ? STEP_TEXT.agent3
+                          : e.agent === 4
+                            ? STEP_TEXT.agent4
+                            : e.level === 'event'
+                              ? 'text-fg'
+                              : 'text-muted'
+                  return (
+                    <div key={`${e.ts}-${i}`} className={`flex items-start gap-2 ${colorCls}`}>
+                      <span className="shrink-0 text-muted-2">{formatHMS(e.ts)}</span>
+                      <span className="break-words">{e.text}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Action zone — always visible, no scroll needed to interact */}
       {(phase === 'sector' ||
