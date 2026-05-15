@@ -70,7 +70,6 @@ export default async function ReportPage(props: {
           analyzer={session.analyzer}
           decider={session.decider}
           disambiguator={session.disambiguator!}
-          pipelineUsage={session.pipelineUsage}
         />
 
         <footer className="pt-6 pb-2 space-y-1.5 text-center text-[11px] text-muted-2">
