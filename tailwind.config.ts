@@ -29,7 +29,7 @@ const config: Config = {
       fontFamily: {
         sans: ['Arial', 'Helvetica', 'system-ui', 'sans-serif'],
         display: ['Arial', 'Helvetica', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        mono: ['var(--font-jetbrains-mono)', 'ui-monospace', 'monospace'],
       },
       boxShadow: {
         glow: '0 0 0 1px rgb(var(--border-hi) / 0.6), 0 8px 24px -8px rgb(var(--accent) / 0.35)',
