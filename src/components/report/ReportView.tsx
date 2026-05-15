@@ -352,7 +352,7 @@ export function ReportView({
           </h3>
           <div className="space-y-3">
             {report.recommendations.map((r, i) => (
-              <div key={i} className="card">
+              <div key={i} className="card card-accent">
                 <p className="text-base font-semibold text-fg">{r.title}</p>
                 <p className="mt-1 text-sm text-muted">{r.description}</p>
                 <p className="mt-2 text-xs italic text-accent-hi">

@@ -255,6 +255,28 @@ html.light body {
   }
 }
 
+/* ============================================================
+ * Accent-bar card — the pitch deck's signature element: a
+ * rounded card with a bold colour bar down one edge.
+ * Usage: `card card-accent` (left bar) or add `card-accent-top`.
+ * ============================================================ */
+.card-accent {
+  position: relative;
+  overflow: hidden;
+}
+.card-accent::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: rgb(var(--accent));
+}
+.card-accent-top::before {
+  inset: 0 0 auto 0;
+  width: auto;
+  height: 4px;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
