@@ -38,6 +38,7 @@ export function DashboardShell({
         open={open}
         onClose={() => setOpen(false)}
         refreshKey={sessionRefreshKey}
+        activeAgent={activeAgent}
       />
 
       <div className={`flex flex-1 flex-col ${sizingCls}`}>
@@ -156,5 +157,5 @@ function AgentDot({
 }
 
 function Connector() {
-  return <span className="h-px w-3 bg-border" aria-hidden="true" />
+  return <span className="sap-line w-3.5" aria-hidden="true" />
 }
