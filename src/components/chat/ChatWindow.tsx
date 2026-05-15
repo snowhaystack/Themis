@@ -197,6 +197,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
   const [pending, setPending] = useState(false)
   const [currentQ, setCurrentQ] = useState<ChatResponse | null>(null)
   const [pipelineStep, setPipelineStep] = useState<number>(0)
+  const [historyCollapsed, setHistoryCollapsed] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const [startedAt, setStartedAt] = useState<number | null>(null)
@@ -257,6 +258,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
     setPending(false)
     setCurrentQ(null)
     setPipelineStep(0)
+    setHistoryCollapsed(true)
     setErrorMsg(null)
     setStartedAt(null)
     setElapsedMs(0)
@@ -596,17 +598,43 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
         </div>
       )}
 
-      {/* Message history — scrollable, shows completed conversation.
-          Compressed to a thin strip while the pipeline is running so the
-          orchestration panel below can take over. */}
-      <div
-        ref={scrollRef}
-        className={`chat-scroll overflow-y-auto rounded-2xl border border-border bg-bg-elev/40 backdrop-blur-xl ${
-          phase === 'orchestrating'
-            ? 'max-h-28 shrink-0 p-3'
-            : 'flex-1 min-h-0 p-4'
-        }`}
-      >
+      {/* While the pipeline runs the conversation is read-only — collapse it
+          behind a toggle so the orchestration panel gets the whole view. */}
+      {phase === 'orchestrating' && (
+        <button
+          type="button"
+          onClick={() => setHistoryCollapsed((c) => !c)}
+          className="flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-border bg-surface/40 px-3 py-1.5 text-[11px] font-medium text-muted transition hover:text-fg"
+        >
+          <svg
+            className={`transition-transform ${historyCollapsed ? '' : 'rotate-90'}`}
+            width="11"
+            height="11"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+          {historyCollapsed ? 'Show conversation' : 'Hide conversation'}
+        </button>
+      )}
+
+      {/* Message history — scrollable. Hidden while the pipeline runs unless
+          the user expands it. */}
+      {(phase !== 'orchestrating' || !historyCollapsed) && (
+        <div
+          ref={scrollRef}
+          className={`chat-scroll overflow-y-auto rounded-2xl border border-border bg-bg-elev/40 backdrop-blur-xl ${
+            phase === 'orchestrating'
+              ? 'max-h-28 shrink-0 p-3'
+              : 'flex-1 min-h-0 p-4'
+          }`}
+        >
         <div className="space-y-4">
           {messages.map((m) => (
             <MessageBubble key={m.id} role={m.role}>
@@ -668,12 +696,13 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
           )}
         </div>
       </div>
+      )}
 
       {/* Pipeline in progress — full-width panel that takes over the view */}
       {phase === 'orchestrating' && (
-        <div className="chat-scroll flex-1 min-h-0 overflow-y-auto rounded-2xl border border-accent/30 bg-bg-elev/60 p-5 backdrop-blur-xl ring-1 ring-accent/10">
-          <div className="space-y-5">
-            <div className="flex items-end justify-between gap-4">
+        <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-accent/30 bg-bg-elev/60 p-5 backdrop-blur-xl ring-1 ring-accent/10">
+          <div className="flex min-h-0 flex-1 flex-col gap-5">
+            <div className="flex shrink-0 items-end justify-between gap-4">
               <div>
                 <p className="text-base font-semibold text-fg">
                   Preparing your report
@@ -692,7 +721,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
               </div>
             </div>
 
-            <div className="relative h-2.5 overflow-hidden rounded-full bg-surface-2">
+            <div className="relative h-2.5 shrink-0 overflow-hidden rounded-full bg-surface-2">
               <div
                 className="h-full rounded-full bg-agent-gradient transition-all duration-500"
                 style={{
@@ -706,7 +735,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
               <div className="pointer-events-none absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/15 to-transparent bg-[length:200%_100%]" />
             </div>
 
-            <ol className="space-y-2.5">
+            <ol className="shrink-0 space-y-2.5">
               {PIPELINE_STEPS.map((s, i) => {
                 const state =
                   i < pipelineStep
@@ -741,8 +770,8 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
               })}
             </ol>
 
-            <div className="rounded-xl border border-border bg-bg/60 p-3 backdrop-blur-xl">
-              <div className="mb-2 flex items-center justify-between">
+            <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-border bg-bg/60 p-3 backdrop-blur-xl">
+              <div className="mb-2 flex shrink-0 items-center justify-between">
                 <p className="font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
                   <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-success" />
                   activity_log
@@ -751,7 +780,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
               </div>
               <div
                 ref={logScrollRef}
-                className="max-h-72 space-y-1 overflow-y-auto font-mono text-[11px] leading-relaxed"
+                className="chat-scroll min-h-0 flex-1 space-y-1 overflow-y-auto font-mono text-[11px] leading-relaxed"
               >
                 {logEntries.slice(-40).map((e, i) => {
                   const colorCls =

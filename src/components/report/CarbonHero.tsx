@@ -109,24 +109,26 @@ export function CarbonHero({ analyzer, rating }: Props) {
         </div>
 
         {/* Equivalences */}
-        <div className="grid w-full grid-cols-2 gap-3 lg:max-w-sm">
+        <div className="grid w-full grid-cols-2 gap-3 lg:max-w-md">
           <Equivalence
             icon="🚗"
             value={formatCount(eq.kmAuto, 'int')}
-            unit="km by car"
+            unit="km driven by car"
           />
           <Equivalence
             icon="🌳"
-            value={
-              eq.alberiAnno < 1
-                ? `${treeDays}`
-                : formatCount(eq.alberiAnno, 'trees')
-            }
-            unit={
-              eq.alberiAnno < 1
-                ? "days of 1 tree's absorption"
-                : 'trees / year'
-            }
+            value={`${treeDays}`}
+            unit="days of one tree's absorption"
+          />
+          <Equivalence
+            icon="🌲"
+            value={formatCount(eq.alberiAnno, 'trees')}
+            unit="trees to plant to offset it"
+          />
+          <Equivalence
+            icon="📱"
+            value={formatCount(eq.smartphoneCariche, 'int')}
+            unit="smartphone charges"
           />
         </div>
       </div>
@@ -151,7 +153,7 @@ function Equivalence({
       <span className="font-mono text-lg font-semibold tabular-nums text-fg">
         {value}
       </span>
-      <span className="text-[10px] uppercase tracking-wide text-muted-2">
+      <span className="text-[11px] font-medium leading-snug text-muted">
         {unit}
       </span>
     </div>

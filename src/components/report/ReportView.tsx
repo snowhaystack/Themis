@@ -5,7 +5,6 @@ import type {
   AnalyzerOutput,
   DeciderOutput,
   DisambiguatorOutput,
-  PipelineUsage,
   ReportSection,
 } from '@/shared/types'
 import { StatsCard } from './StatsCard'
@@ -20,7 +19,6 @@ interface Props {
   analyzer: AnalyzerOutput
   decider: DeciderOutput
   disambiguator: DisambiguatorOutput
-  pipelineUsage?: PipelineUsage
 }
 
 const SIZE_LABEL: Record<DisambiguatorOutput['company']['size'], string> = {
@@ -161,7 +159,6 @@ export function ReportView({
   analyzer,
   decider,
   disambiguator,
-  pipelineUsage,
 }: Props) {
   const company = disambiguator.company
   const handleDownloadPdf = () => {
@@ -364,71 +361,6 @@ export function ReportView({
               </div>
             ))}
           </div>
-        </section>
-      )}
-
-      {/* Pipeline usage — how many tokens we burned producing this report */}
-      {pipelineUsage && pipelineUsage.entries.length > 0 && (
-        <section className="card">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-2">
-                AI generation cost for this report
-              </p>
-              <p className="mt-1 font-display text-2xl font-semibold text-fg">
-                {pipelineUsage.totals.total.toLocaleString('en-US')}{' '}
-                <span className="text-sm font-medium text-muted">tokens</span>
-              </p>
-              <p className="mt-1 text-xs text-muted">
-                {pipelineUsage.totals.input.toLocaleString('en-US')} input ·{' '}
-                {pipelineUsage.totals.output.toLocaleString('en-US')} output ·{' '}
-                consumed by {pipelineUsage.entries.length} pipeline agent
-                {pipelineUsage.entries.length === 1 ? '' : 's'} to produce this
-                analysis
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-[10px] uppercase tracking-wider text-muted-2">
-                  <th className="py-2 pr-4 font-medium">Agent</th>
-                  <th className="py-2 pr-4 font-medium">Model</th>
-                  <th className="py-2 pr-4 text-right font-medium">Input</th>
-                  <th className="py-2 pr-4 text-right font-medium">Output</th>
-                  <th className="py-2 pr-0 text-right font-medium">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pipelineUsage.entries.map((e, i) => (
-                  <tr
-                    key={`${e.agent}-${i}`}
-                    className="border-b border-border last:border-0"
-                  >
-                    <td className="py-2 pr-4 font-mono text-xs text-fg">
-                      {e.agent}
-                    </td>
-                    <td className="py-2 pr-4 font-mono text-xs text-muted">
-                      {e.model}
-                    </td>
-                    <td className="py-2 pr-4 text-right font-mono text-xs tabular-nums text-muted">
-                      {e.usage.input.toLocaleString('en-US')}
-                    </td>
-                    <td className="py-2 pr-4 text-right font-mono text-xs tabular-nums text-muted">
-                      {e.usage.output.toLocaleString('en-US')}
-                    </td>
-                    <td className="py-2 pr-0 text-right font-mono text-xs font-semibold tabular-nums text-fg">
-                      {e.usage.total.toLocaleString('en-US')}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-3 text-[11px] text-muted-2">
-            Tokens count input prompts + generated output. Disambiguator usage
-            (the chat turns) is not included here.
-          </p>
         </section>
       )}
     </div>
