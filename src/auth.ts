@@ -80,5 +80,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: '/login',
   },
 
-  secret: process.env.NEXTAUTH_SECRET,
+  // Required when running behind a reverse proxy on a non-Vercel host —
+  // without it Auth.js v5 rejects every request with UntrustedHost (500).
+  trustHost: true,
+
+  secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
 })
