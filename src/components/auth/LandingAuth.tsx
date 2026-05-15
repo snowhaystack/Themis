@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { BrandMark } from '@/components/brand/BrandMark'
+import { DecorRings } from '@/components/brand/DecorRings'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
 export function LandingAuth() {
@@ -65,7 +66,8 @@ export function LandingAuth() {
   if (!mounted) return null
 
   return (
-    <div className="relative min-h-dvh flex flex-col">
+    <div className="relative isolate min-h-dvh flex flex-col overflow-hidden">
+      <DecorRings className="absolute right-0 top-0 -z-10 h-[32rem] w-[32rem]" />
       <header className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2.5">
           <BrandMark size={22} className="text-fg" />
