@@ -25,6 +25,10 @@ services:
       NODE_ENV: production
       REDIS_URL: redis://redis:6379
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      # Required by Auth.js — without a secret every /api/auth/* request
+      # fails with a 500 "server configuration" error.
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
       PORT: 3000
       HOSTNAME: 0.0.0.0
     ports:
