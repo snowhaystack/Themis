@@ -174,16 +174,15 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
       id: 'm-0',
       role: 'agent',
       content: (
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           <p className="font-semibold text-fg">
             Hi 👋 — I&apos;m <span className="text-gradient">Themis</span>, your AI advisor.
           </p>
-          <p className="text-sm text-muted leading-relaxed">
-            I&apos;ll ask you <strong className="text-fg">5–6 quick questions</strong> and produce a
-            personalised report with recommended AI models, monthly costs in €, and
-            an EU carbon rating (A–E) — in about 60 seconds.
+          <p className="text-xs sm:text-sm text-muted leading-relaxed">
+            <strong className="text-fg">5–6 quick questions</strong> → personalised report
+            with AI models, costs in €, and carbon rating (A–E).
           </p>
-          <div className="flex flex-wrap gap-2 pt-1">
+          <div className="hidden sm:flex flex-wrap gap-2 pt-1">
             {['Google · Anthropic · OpenAI', '€ cost estimates', 'Carbon A–E'].map((tag) => (
               <span key={tag} className="rounded-full bg-surface-hi px-2.5 py-1 text-[11px] font-medium text-muted">
                 {tag}
@@ -223,16 +222,15 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
     id: 'm-0',
     role: 'agent',
     content: (
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         <p className="font-semibold text-fg">
           Hi 👋 — I&apos;m <span className="text-gradient">Themis</span>, your AI advisor.
         </p>
-        <p className="text-sm text-muted leading-relaxed">
-          I&apos;ll ask you <strong className="text-fg">5–6 quick questions</strong> and produce a
-          personalised report with recommended AI models, monthly costs in €, and
-          an EU carbon rating (A–E) — in about 60 seconds.
+        <p className="text-xs sm:text-sm text-muted leading-relaxed">
+          <strong className="text-fg">5–6 quick questions</strong> → personalised report
+          with AI models, costs in €, and carbon rating (A–E).
         </p>
-        <div className="flex flex-wrap gap-2 pt-1">
+        <div className="hidden sm:flex flex-wrap gap-2 pt-1">
           {['Google · Anthropic · OpenAI', '€ cost estimates', 'Carbon A–E'].map((tag) => (
             <span key={tag} className="rounded-full bg-surface-hi px-2.5 py-1 text-[11px] font-medium text-muted">
               {tag}
