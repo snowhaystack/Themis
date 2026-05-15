@@ -571,7 +571,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-3">
+    <div className="flex h-full flex-col gap-2 sm:gap-3">
       {/* Toolbar — visible once the user has started */}
       {showRestartButton && (
         <div className="flex shrink-0 items-center justify-between gap-2">
@@ -632,7 +632,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
           className={`chat-scroll overflow-y-auto rounded-2xl border border-border bg-bg-elev/40 backdrop-blur-xl ${
             phase === 'orchestrating'
               ? 'max-h-28 shrink-0 p-2 sm:p-3'
-              : 'flex-1 min-h-0 p-2.5 sm:p-4'
+              : 'flex-1 min-h-[30vh] sm:min-h-0 p-2.5 sm:p-4'
           }`}
         >
         <div className="space-y-4">
@@ -813,7 +813,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
         phase === 'employees' ||
         (phase === 'chatting' && currentQ && !currentQ.done) ||
         phase === 'naming') && (
-        <div className="shrink-0 rounded-2xl border border-accent/30 bg-accent/5 p-3 sm:p-4 backdrop-blur-xl ring-1 ring-accent/10">
+        <div className="min-h-0 max-h-[45vh] sm:max-h-none overflow-y-auto rounded-2xl border border-accent/30 bg-accent/5 p-3 sm:p-4 backdrop-blur-xl ring-1 ring-accent/10">
           <div className="mb-3 flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse-soft" />
             <span className="text-[11px] font-semibold uppercase tracking-wider text-accent-hi/70">
@@ -904,7 +904,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
         </div>
       )}
 
-      <div className="shrink-0 space-y-1 text-center text-[11px] text-muted-2">
+      <div className="hidden sm:block shrink-0 space-y-1 text-center text-[11px] text-muted-2">
         <p>© {new Date().getFullYear()} Themis — Hackathon prototype · 4-agent Gemini pipeline</p>
         <p className="leading-relaxed">
           <span className="font-medium text-muted">Demo notice:</span> data is for demonstration purposes only, based on generic industry benchmarks. Sector analysis performs a live lookup on available market data — results may vary as data is updated.
