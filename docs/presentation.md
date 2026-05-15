@@ -85,8 +85,10 @@ No prompt engineering required from the user. No hallucinated numbers. Every dat
 
 Every step: **Zod-validated I/O** + `responseMimeType: application/json` + retry-on-parse-failure
 
+A **deterministic evaluation gate** sanity-checks Agents 2 & 3 — bad output (hallucinated model, totals that don't add up, implausible ROI) triggers one retry before it can poison the next stage
+
 <!-- speaker notes
-Sequential pipeline orchestrated in Redis. Each agent has a typed contract — if Agent 2's output doesn't pass Zod validation, we retry with the error message injected into the prompt. This is reliable engineering, not prompt-and-pray. Exponential backoff + fallback model support built in.
+Sequential pipeline orchestrated in Redis. Each agent has a typed contract — if Agent 2's output doesn't pass Zod validation, we retry with the error message injected into the prompt. On top of that, a deterministic evaluation gate runs cheap no-LLM checks after the Analyzer and Decider and retries the agent once if something is off. This is reliable engineering, not prompt-and-pray. Exponential backoff + fallback model support built in.
 -->
 
 ---
@@ -97,8 +99,9 @@ Sequential pipeline orchestrated in Redis. Each agent has a typed contract — i
 |---|---|
 | Framework | **Next.js 15** (App Router, TypeScript) |
 | LLM | **Google Gemini API** (2.5-flash + 2.5-pro) |
-| State | **Redis** (1h TTL session, pipeline status) |
+| State | **Redis** (4h active · 7-day completed reports) |
 | Validation | **Zod** (typed agent contracts) |
+| Auth | **NextAuth v5** (credentials + guest, role-based access) |
 | Styling | **TailwindCSS** (dark mode, custom design system) |
 | Infra | **Docker Compose** (multi-stage build) |
 | Deploy | **Vultr VPS** (one-command deploy script) |
@@ -115,12 +118,13 @@ We also built a cross-provider model catalog covering 9 models across Google, An
 
 **`<DEMO_URL>`**
 
+0. Enter as **guest** in one click — or log in / register
 1. Pick **sector** + **employee range** from dropdowns
 2. Answer closed-option Q&A (max 10 questions, often fewer)
-3. Watch pipeline status: **Analyzing --> Deciding --> Formatting --> Done**
+3. Watch the **full-width pipeline view**: Analyzing --> Deciding --> Formatting --> Done
 4. Land on the report: cost in EUR, A-E carbon rating, decision cards
 
-Sidebar shows session history with live status indicators and search.
+Sidebar shows the **live 4-agent pipeline panel**, session history with status indicators, and your connection details.
 
 <!-- speaker notes
 THIS IS THE DEMO SLIDE — spend ~90 seconds here. Show a real session: pick "fintech" + "50-249 employees", answer 5-6 questions, watch the pipeline run live in the sidebar, then walk through the report. Point out the carbon badge, cost breakdown by role, and decision cards with real-world benchmarks.
@@ -145,14 +149,14 @@ The report covers 9 models from 3 providers: Google (flash-lite, flash, pro), An
 
 ## Why It's Defensible
 
-**Reliable output** --- `responseMimeType: application/json` + Zod validation + exponential retry + fallback models
-`src/lib/gemini/client.ts` --- `src/lib/types/index.ts`
+**Reliable output** --- Zod validation + `responseMimeType: application/json` + retry + a deterministic evaluation gate that re-runs an agent on bad output
+`src/server/infrastructure/gemini/client.ts` --- `src/server/domain/analysis/agents/evaluator.ts`
 
 **Editable economics** --- Pricing, carbon factors, benchmarks are TypeScript constants, not prompts
-`src/lib/data/pricing.ts` --- `src/lib/data/carbon.ts` --- `src/lib/data/catalog.ts`
+`src/server/domain/analysis/data/catalog.ts` --- `src/server/domain/analysis/data/carbon.ts`
 
-**Real engineering** --- Multi-stage Docker, healthcheck, one-command Vultr deploy, session state in Redis
-`docker/Dockerfile` --- `scripts/deploy.sh` --- `scripts/setup-vultr.sh`
+**Real engineering** --- DDD architecture, multi-stage Docker, healthcheck, one-command deploy, Redis state, NextAuth RBAC
+`docker/Dockerfile` --- `scripts/deploy.sh` --- `src/auth.ts`
 
 <!-- speaker notes
 Three things judges can verify in the repo. The Gemini client has responseMimeType enforcement, Zod safeParse, and if parsing fails it injects the error back into the prompt for retry with exponential backoff. Pricing is in catalog.ts with 9 models across 3 providers — change one number, every downstream calculation updates. The Dockerfile is a proper 3-stage build with a non-root user and curl-based healthcheck.
@@ -185,7 +189,7 @@ Six phases executed cleanly. setup-vultr.sh handles Docker install, UFW firewall
 
 - **Who pays:** SMBs (10-249 emp) buying advisory; enterprise AI-adoption committees; consultancies white-labelling reports
 - **Why now:** EU CSRD/CBAM pressure on AI carbon disclosure makes this a compliance tool, not just advice
-- **Scale path:** multi-tenant + auth, persistent storage beyond 1h TTL, vertical sector packs, cost models refined from real usage telemetry
+- **Scale path:** persistent datastore beyond Redis TTLs, vertical sector packs, cost models refined from real usage telemetry (auth + RBAC already shipped)
 
 <!-- speaker notes
 The cross-provider catalog already covers 3 vendors and 9 models. Adding more is a data file change, not an architecture change. Vertical packs (fintech, healthcare, manufacturing) can ship as premium tiers. The carbon rating aligns with EU energy efficiency labelling — familiar to European procurement teams.
@@ -196,10 +200,10 @@ The cross-provider catalog already covers 3 vendors and 9 models. Adding more is
 ## Honest Limits
 
 - Estimates are **indicative**, driven by constants we expose and document --- real billing telemetry will tighten them over time
-- No auth, no persistence beyond 1h TTL --- designed for the demo, ready for the upgrade path described on the previous slide
+- Sessions live in Redis (4h active, 7-day completed reports) --- no long-term datastore yet, but auth + RBAC are already in place for the multi-tenant upgrade
 
 <!-- speaker notes
-We chose to be transparent. The pricing constants are sourced from public Google/Anthropic/OpenAI pricing pages and the carbon factors from Tomlinson et al. 2024 + Google sustainability reports. They're good baselines. But real-world token consumption varies wildly — we'd need telemetry from actual deployments to tighten the estimates. The 1h TTL is a deliberate hackathon choice: no persistence = no PII concerns.
+We chose to be transparent. The pricing constants are sourced from public Google/Anthropic/OpenAI pricing pages and the carbon factors from Tomlinson et al. 2024 + Google sustainability reports. They're good baselines. But real-world token consumption varies wildly — we'd need telemetry from actual deployments to tighten the estimates. Sessions are kept in Redis only — 4h for active pipelines, 7 days for completed reports — so there's no long-term datastore yet; a proper database is the next step for multi-tenant use.
 -->
 
 ---
