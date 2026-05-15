@@ -7,13 +7,13 @@ import type {
   DisambiguatorOutput,
   PipelineUsage,
   ReportSection,
-} from '@/lib/types'
+} from '@/shared/types'
 import { StatsCard } from './StatsCard'
 import { CarbonHero } from './CarbonHero'
 import { CostBreakdown } from './CostBreakdown'
 import { DecisionCard } from './DecisionCard'
 import { RoleImpact } from './RoleImpact'
-import { humanize, formatEur } from '@/lib/utils/format'
+import { humanize, formatEur } from '@/shared/utils/format'
 
 interface Props {
   report: FinalReport

@@ -1,6 +1,6 @@
 'use client'
 
-import type { CarbonRating } from '@/lib/types'
+import type { CarbonRating } from '@/shared/types'
 
 const STYLES: Record<CarbonRating, { bg: string; text: string; label: string }> = {
   A: { bg: 'bg-emerald-500/20', text: 'text-emerald-300', label: 'Eccellente' },

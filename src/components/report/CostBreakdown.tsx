@@ -1,7 +1,7 @@
 'use client'
 
-import type { AnalyzerOutput, ModelProvider } from '@/lib/types'
-import { humanize, formatEur } from '@/lib/utils/format'
+import type { AnalyzerOutput, ModelProvider } from '@/shared/types'
+import { humanize, formatEur } from '@/shared/utils/format'
 
 interface Props {
   analyzer: AnalyzerOutput

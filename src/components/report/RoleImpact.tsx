@@ -1,10 +1,19 @@
 'use client'
 
-import type { AnalyzerOutput, ImpactLevel } from '@/lib/types'
-import { humanize } from '@/lib/utils/format'
+import type { AnalyzerOutput, ImpactLevel } from '@/shared/types'
+import { humanize } from '@/shared/utils/format'
 
 interface Props {
   analyzer: AnalyzerOutput
+}
+
+function countToRange(count: number): string {
+  if (count <= 1) return '1'
+  if (count <= 3) return '2–3'
+  if (count <= 7) return '4–7'
+  if (count <= 15) return '8–15'
+  if (count <= 30) return '16–30'
+  return '30+'
 }
 
 const LEVEL_THEME: Record<
@@ -53,7 +62,7 @@ export function RoleImpact({ analyzer }: Props) {
                     {humanize(r.role)}
                   </p>
                   <p className="mt-0.5 font-mono text-[11px] text-muted-2">
-                    {r.count} user{r.count === 1 ? '' : 's'}
+                    {countToRange(r.count)} user{r.count === 1 ? '' : 's'}
                   </p>
                 </div>
                 <span

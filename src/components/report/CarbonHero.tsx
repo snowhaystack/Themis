@@ -1,7 +1,7 @@
 'use client'
 
-import type { AnalyzerOutput, CarbonRating } from '@/lib/types'
-import { carbonEquivalents } from '@/lib/data/carbon'
+import type { AnalyzerOutput, CarbonRating } from '@/shared/types'
+import { carbonEquivalents } from '@/shared/utils/carbon-display'
 
 interface Props {
   analyzer: AnalyzerOutput

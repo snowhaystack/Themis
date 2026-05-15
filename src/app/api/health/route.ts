@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getRedis } from '@/lib/redis/client'
+import { getRedis } from '@/server/infrastructure/redis/client'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -13,12 +13,7 @@ export async function GET() {
       ts: new Date().toISOString(),
     })
   } catch (err) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: err instanceof Error ? err.message : String(err),
-      },
-      { status: 503 }
-    )
+    console.error('[API /health] Redis check failed:', err)
+    return NextResponse.json({ ok: false, redis: 'down' }, { status: 503 })
   }
 }

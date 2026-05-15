@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { SessionSummary } from '@/app/api/sessions/route'
+import type { SessionSummary } from '@/shared/types/session-summary'
 import { BrandWordmark } from '@/components/brand/BrandMark'
 
 interface Props {
@@ -68,6 +69,8 @@ function relativeTime(iso: string): string {
 
 export function Sidebar({ open, onClose, refreshKey = 0 }: Props) {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const canViewDashboard = session?.user?.role === 'admin' || session?.user?.role === 'guest'
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -180,6 +183,30 @@ export function Sidebar({ open, onClose, refreshKey = 0 }: Props) {
             Nuova analisi
           </Link>
         </div>
+
+        {/* Dashboard link */}
+        {canViewDashboard && (
+          <div className="px-4 pt-2">
+            <Link
+              href="/admin"
+              onClick={onClose}
+              className={`flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all ${
+                pathname === '/admin'
+                  ? 'border-accent/40 bg-accent/10 text-accent-hi'
+                  : 'border-border bg-surface/60 text-muted hover:border-accent/30 hover:bg-accent/5 hover:text-fg'
+              }`}
+            >
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-agent-gradient text-white">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+                </svg>
+              </span>
+              <span className="flex-1">Platform stats</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-40"><path d="m9 18 6-6-6-6" /></svg>
+            </Link>
+          </div>
+        )}
 
         {/* Search */}
         <div className="px-4 pt-3">

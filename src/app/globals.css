@@ -266,6 +266,9 @@ html.light body {
   .no-print, .no-print\:hidden { display: none !important; }
   @page {
     size: A4;
-    margin: 14mm 12mm;
+    margin: 0;
+  }
+  body {
+    padding: 14mm 12mm !important;
   }
 }

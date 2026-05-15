@@ -1,231 +1,180 @@
-# Themis — AI Advisor for Business
+<div align="center">
 
-Web app sviluppata per un hackathon. Tramite un flusso a **4 agenti AI** (Google Gemini) genera un report personalizzato per aziende che vogliono adottare l'AI:
+# ⚖️ Themis
 
-- modelli AI consigliati per ogni use case
-- stima consumi e costi mensili/annuali (EUR)
-- impatto ambientale con rating europeo A–E
-- raccomandazioni con benchmark di casi reali
+### AI Advisor for Business
 
-Stack: **Next.js 15** (App Router, TS) · **Gemini API** · **Redis** · **TailwindCSS** · **Docker** · deploy su **Vultr**.
+**Figure out how much AI you actually need, what it will cost,
+and what it will cost the planet — without becoming an AI expert.**
 
----
+<br/>
 
-## 🧠 Architettura agentica
+![Disambiguator](https://img.shields.io/badge/Disambiguator-0A0A0F?style=for-the-badge&labelColor=22D3EE&color=0A0A0F)
+![Analyzer](https://img.shields.io/badge/Analyzer-0A0A0F?style=for-the-badge&labelColor=8B5CF6&color=0A0A0F)
+![Decider](https://img.shields.io/badge/Decider-0A0A0F?style=for-the-badge&labelColor=EC4899&color=0A0A0F)
+![Formatter](https://img.shields.io/badge/Formatter-0A0A0F?style=for-the-badge&labelColor=F59E0B&color=0A0A0F)
 
-```
-Input chatbot (sector + employee range)
-        │
-        ▼
-   AGENTE 1 — Disambiguatore        (gemini-2.5-flash)
-   conversazione a opzioni chiuse,
-   produce DisambiguatorOutput
-        │
-        ▼
-   AGENTE 2 — Analizzatore          (gemini-2.5-pro)
-   sceglie modelli, stima token,
-   costi, carbon footprint
-        │
-        ▼
-   AGENTE 3 — Decisionale           (gemini-2.5-pro)
-   bilancia costo/affidabilità/CO2,
-   sceglie lo stack, calcola ROI
-        │
-        ▼
-   AGENTE 4 — Formattatore          (gemini-2.5-flash)
-   genera FinalReport tipizzato
-        │
-        ▼
-   Pagina report /report/[sessionId]
-```
+<br/>
 
-Ogni agente ha un contratto **Zod** verificato. Su errore di parsing si riprova fino a 2 volte passando l'errore al modello (`responseMimeType: application/json`).
+![Next.js](https://img.shields.io/badge/Next.js_15-0A0A0F?style=flat-square&labelColor=0A0A0F&color=8B5CF6)
+![TypeScript](https://img.shields.io/badge/TypeScript-0A0A0F?style=flat-square&labelColor=0A0A0F&color=22D3EE)
+![Gemini](https://img.shields.io/badge/Google_Gemini-0A0A0F?style=flat-square&labelColor=0A0A0F&color=EC4899)
+![Docker](https://img.shields.io/badge/Docker-0A0A0F?style=flat-square&labelColor=0A0A0F&color=F59E0B)
 
-Lo stato della sessione è in Redis con TTL 1h.
+</div>
 
 ---
 
-## 📁 Struttura del progetto
+## 🎯 Philosophy
 
-```
-src/
-  app/
-    page.tsx                          # Landing + chatbot
-    report/[sessionId]/page.tsx       # Pagina report finale
-    api/
-      chat/route.ts                   # POST: gestisce conversazione Agente 1
-      orchestrate/route.ts            # POST: avvia pipeline 2→3→4
-      report/[sessionId]/route.ts     # GET: stato/report da Redis
-      health/route.ts                 # GET: healthcheck per Docker
-  lib/
-    types/index.ts                    # Tutti gli schema Zod
-    gemini/client.ts                  # Wrapper Gemini (JSON mode + retry)
-    redis/client.ts                   # Client Redis singleton
-    agents/
-      disambiguator.ts                # Agente 1
-      analyzer.ts                     # Agente 2
-      decider.ts                      # Agente 3
-      formatter.ts                    # Agente 4
-      orchestrator.ts                 # Pipeline runner + Redis state
-    data/
-      pricing.ts                      # Pricing Gemini (modificabile)
-      carbon.ts                       # Fattori CO2 (modificabile)
-      benchmarks.ts                   # Casi reali per il report
-  components/
-    chat/                             # ChatWindow, MessageBubble, OptionSelector
-    report/                           # ReportView, StatsCard, CarbonBadge, ...
-docker/
-  Dockerfile                          # Multi-stage Next.js standalone
-docker-compose.yml                    # app + redis
-scripts/
-  setup-vultr.sh                      # Setup VPS Ubuntu (Docker, UFW, utente deploy)
-  deploy.sh                           # rsync + build + restart su VPS
-```
+Themis — named after the Greek titaness of fair counsel — exists because
+adopting AI shouldn't require being an AI expert, and shouldn't be a leap of
+faith. Three principles drive every decision in this project:
+
+- **🟣 Vendor-neutral by default.** Recommendations span **Google, Anthropic
+  and OpenAI**. No lock-in, no favorites — the right model for the job, even
+  if that means mixing providers.
+- **🔵 Honest trade-offs, not hype.** Every recommendation comes with its
+  cost, its risks, its ROI window — and its **carbon price**. Cost is never
+  just money.
+- **🩷 No expertise required.** Start to finish, the experience is a
+  **closed-options conversation**. No free-text prompts, no jargon, no
+  accounts. You answer multiple-choice questions; the agents do the
+  reasoning.
+
+> Estimates are **indicative** — built on public pricing tables and published
+> emission factors. The goal is honest *relative comparison*, not accounting
+> precision.
 
 ---
 
-## 🚀 Setup locale
+## ⭐ The Three Fundamental Features
 
-### Requisiti
-- Node.js 20+
-- Docker + Docker Compose
-- Una chiave API Gemini ([Google AI Studio](https://aistudio.google.com/apikey))
+> Everything else in the report supports these three pillars.
 
-### Sviluppo
+### 🟣 1 — Multi-Vendor AI Recommendations
+
+Themis matches each of your use cases to a concrete model across
+**Google, Anthropic and OpenAI**. You get a per-use-case shortlist instead
+of a one-size-fits-all answer — because the cheapest model for summarization
+is rarely the best one for code.
+
+### 🔵 2 — Transparent Cost Forecast
+
+A **monthly and annual cost estimate in EUR**, derived from how many people
+will use AI, how often, and for what. No surprise bills — you see the number
+before you commit, with the assumptions that produced it.
+
+### 🩷 3 — Carbon Footprint with EU Energy Rating
+
+Every plan ships with its environmental cost: an **EU energy-efficiency
+rating (A–E)** and human-readable equivalences. AI has a planetary price,
+and Themis puts it on the table next to the euros. *(Full detail below.)*
+
+---
+
+## 🌱 Carbon Impact
+
+AI inference consumes real energy. Themis treats that as a **first-class
+metric**, not a footnote.
+
+For every recommended plan, the report shows:
+
+| What you see | What it means |
+|---|---|
+| **🅰️–🅴 EU energy rating** | An A-to-E grade, mirroring the EU appliance-efficiency label everyone already understands. |
+| **CO₂ estimate** | Annual emissions for your projected AI usage, in kg of CO₂. |
+| **🚗 Real-world equivalences** | The same footprint expressed as **km driven by car**, **trees needed to offset it**, and **phone charges** — numbers a human can feel. |
+| **♻️ Carbon-optimization tips** | Concrete ways to cut the footprint: smaller models for simple tasks, batching, lower-carbon regions. |
+
+The carbon number sits **right next to the cost number** in every strategic
+decision — so reducing emissions is a choice you can make deliberately, with
+the trade-off visible, instead of an afterthought.
+
+> Figures are based on **published carbon-emission factors** for AI inference
+> and are indicative — meant for comparing options, not for official
+> carbon accounting.
+
+---
+
+## 🚀 How to Use
+
+### From the user's point of view
+
+```
+1.  Pick your industry and company size from two dropdowns.
+2.  Answer a short multiple-choice conversation that profiles your team:
+      use cases, roles involved, headcount, how often AI will be used.
+3.  Name your report.
+4.  Wait ~45 seconds while the pipeline thinks out loud
+      (you watch each phase: analyzing → deciding → formatting).
+5.  Read a structured report. Tweak the name. Export to PDF.
+```
+
+No accounts. No free-text. A closed-options chat from start to finish.
+
+### Quick start
 
 ```bash
 cp .env.example .env
-# modifica .env con la tua GEMINI_API_KEY
-
-# Avvia Redis in Docker
-docker run -d --name themis-redis -p 6379:6379 redis:7-alpine
-
-# Installa deps e avvia dev server
-npm install
-npm run dev
-```
-
-App su [http://localhost:3000](http://localhost:3000).
-
-### Full stack via Docker Compose
-
-```bash
-cp .env.example .env
-# modifica .env con GEMINI_API_KEY
+# add your GEMINI_API_KEY to .env
 
 docker compose --env-file .env up -d --build
 ```
 
-App su [http://localhost:3000](http://localhost:3000). Logs:
+Open **http://localhost:3000**.
 
-```bash
-docker compose logs -f app
-```
-
----
-
-## 🌍 Variabili d'ambiente
-
-| Variabile | Obbligatoria | Default | Descrizione |
-|---|---|---|---|
-| `GEMINI_API_KEY` | ✅ | — | Chiave Google AI Studio |
-| `REDIS_URL` | ✅ | `redis://localhost:6379` | URL Redis (in Docker: `redis://redis:6379`) |
-| `NODE_ENV` |  | `development` | `production` per build prod |
+You'll need a free [Google AI Studio key](https://aistudio.google.com/apikey)
+for the AI pipeline. For local dev without Docker, see the scripts in
+`package.json`.
 
 ---
 
-## 🧪 Test rapido del flusso
+## 🧠 How It Works (under the hood)
 
-1. Apri la home, scegli **settore** e **range dipendenti**.
-2. Rispondi alle domande a opzioni chiuse (max 10).
-3. Quando l'Agente 1 ha abbastanza dati, parte la pipeline 2→3→4 con indicatore di stato.
-4. A fine pipeline vieni reindirizzato a `/report/[sessionId]`.
+Four agents talk to each other in sequence — each step validated end-to-end
+so the output stays structured:
 
-Log dei singoli agenti nel server con prefisso `[AGENT1]`, `[AGENT2]`, ecc.
+| Stage | Agent | Role |
+|---|---|---|
+| 🔵 | **Disambiguator** | Runs the closed-options chat and profiles your company. |
+| 🟣 | **Analyzer** | Crunches the numbers — usage, tokens, cost, carbon. |
+| 🩷 | **Decider** | Produces trade-off-driven recommendations and ROI. |
+| 🟠 | **Formatter** | Assembles the final structured report. |
 
----
+The report also includes **per-role impact analysis** (what each team can
+expect, concretely) and **real-world benchmarks** from companies that did
+similar things.
 
-## 🛠️ Modificare costi e fattori carbon
-
-I valori sono in **costanti TypeScript**, non nei prompt:
-
-- `src/lib/data/pricing.ts` — pricing Gemini (USD/1M token), tasso EUR/USD, token/giorno per frequenza, moltiplicatori per tech literacy
-- `src/lib/data/carbon.ts` — kg CO₂ per 1k token per modello, soglie rating A–E, equivalenze (km auto, alberi, ecc.)
-
-Modifica il file, ricarica: tutti i calcoli si aggiornano.
+Full technical deep-dive: **[ARCHITECTURE.md](./ARCHITECTURE.md)**.
 
 ---
 
-## 🚢 Deploy su Vultr
+## 🛠 Stack
 
-### 1. Crea un VPS Vultr (Ubuntu 22.04 o 24.04)
+Next.js 15 · TypeScript · Tailwind · Zod · Redis · Google Gemini API · Docker.
 
-Almeno 1 GB RAM, IPv4 pubblico.
-
-### 2. Setup iniziale del server
-
-Dalla tua macchina locale:
-
-```bash
-ssh root@<vps-ip> 'bash -s' < scripts/setup-vultr.sh
-```
-
-Lo script:
-- aggiorna pacchetti
-- installa Docker + Docker Compose plugin
-- crea utente `deploy` con accesso `sudo`/`docker`
-- abilita UFW (22, 80, 443)
-- hardening sshd (disabilita password login)
-
-### 3. Deploy
-
-Dalla tua macchina locale, con la repo clonata e la chiave SSH già configurata sul VPS:
-
-```bash
-export DEPLOY_HOST=<vps-ip>
-export DEPLOY_USER=deploy
-export GEMINI_API_KEY=sk-...
-
-./scripts/deploy.sh
-```
-
-Lo script:
-- `rsync` dei sorgenti su `/opt/themis`
-- scrive `.env` con le chiavi
-- `docker compose up -d --build`
-- attende healthcheck su `/api/health`
-
-App raggiungibile su `http://<vps-ip>:3000`. Per HTTPS aggiungi un reverse proxy (Caddy / Nginx + Certbot) davanti al container.
-
-### Update rapido
-
-Ogni volta che vuoi rideployare:
-
-```bash
-DEPLOY_HOST=<vps-ip> GEMINI_API_KEY=sk-... ./scripts/deploy.sh
-```
+Deploy target: a single Vultr VPS via the scripts in `scripts/`.
 
 ---
 
-## 🧰 Comandi utili
+## 📂 Repo Layout
 
-```bash
-npm run dev          # dev server
-npm run build        # build produzione (output: .next/standalone)
-npm run start        # avvio produzione locale (richiede npm run build)
-npm run lint         # lint
-npm run typecheck    # tsc --noEmit
-
-docker compose up -d --build              # full stack
-docker compose logs -f app                # logs app
-docker compose exec redis redis-cli       # shell Redis
-```
+- **`main` branch** — stable, hackathon-ready demo.
+- **`dev` branch** — active development (auth, RBAC, multi-tenant).
+- **`docs/`** — internal notes and the hackathon presentation.
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** — technical deep-dive.
+- **[PROJECT_SPEC.md](./PROJECT_SPEC.md)** — original hackathon brief.
 
 ---
 
-## ⚠️ Note
+## 📌 Notes
 
-- Nessuna autenticazione: la sessione è un UUID gestito in Redis (TTL 1h).
-- Il chatbot è **a opzioni chiuse**: l'utente non può scrivere testo libero in alcuno step.
-- I benchmark nel report sono esempi reali noti (Klarna, Morgan Stanley, ecc.); altri casi possono essere indicati come "esempi indicativi".
-- Le stime di costo e CO₂ sono **indicative**, basate su costanti modificabili in `lib/data/`.
+- All estimates (costs, tokens, CO₂) are **indicative** — based on public
+  pricing tables and published carbon-emission factors. The point is
+  relative comparison, not accounting accuracy.
+- Benchmarks shown in the report are real published case studies presented
+  as examples, not promises of identical outcomes.
+- This is a hackathon prototype. It works end-to-end and is deployable, but
+  it has no auth, no tests on this branch, and assumes a single trusted
+  user. The `dev` branch has the production-hardening work in progress.

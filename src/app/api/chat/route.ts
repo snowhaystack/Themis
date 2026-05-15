@@ -1,10 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { runDisambiguator } from '@/lib/agents/disambiguator'
-import {
-  ChatStateSchema,
-  type ChatResponse,
-} from '@/lib/types'
+import { runDisambiguator } from '@/server/domain/analysis/agents/disambiguator'
+import { ChatStateSchema, type ChatResponse } from '@/shared/types'
+import { resolveUserFromRequest, apiError } from '@/server/domain/identity/session-resolver'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -13,8 +11,10 @@ const RequestSchema = z.object({
   state: ChatStateSchema,
 })
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    await resolveUserFromRequest(req)
+
     const body = await req.json()
     const parsed = RequestSchema.safeParse(body)
     if (!parsed.success) {
@@ -29,8 +29,6 @@ export async function POST(req: Request) {
     })
     return NextResponse.json(response)
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    console.error('[API /chat] error:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiError(err, 'API /chat')
   }
 }
