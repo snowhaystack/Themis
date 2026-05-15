@@ -93,6 +93,8 @@ export const NextQuestionSchema = z.object({
   question: z.string(),
   options: z.array(ChatOptionSchema).min(2).max(8),
   multiSelect: z.boolean(),
+  elapsedMs: z.number().optional(),
+  tokens: z.number().int().min(0).optional(),
 })
 export type NextQuestion = z.infer<typeof NextQuestionSchema>
 
@@ -122,6 +124,8 @@ export const ChatResponseSchema = z.discriminatedUnion('done', [
   z.object({
     done: z.literal(true),
     output: DisambiguatorOutputSchema,
+    elapsedMs: z.number().optional(),
+    tokens: z.number().int().min(0).optional(),
   }),
 ])
 export type ChatResponse = z.infer<typeof ChatResponseSchema>

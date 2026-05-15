@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 export default async function AdminPage() {
   const session = await auth()
 
-  if (!session?.user || session.user.role !== 'admin') {
+  if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'guest')) {
     redirect('/login?callbackUrl=/admin')
   }
 

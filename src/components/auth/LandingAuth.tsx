@@ -98,6 +98,33 @@ export function LandingAuth() {
 
             {tab === 'choose' && (
               <>
+                <button
+                  onClick={handleGuest}
+                  disabled={guestLoading}
+                  className="w-full flex items-center justify-between rounded-xl border-2 border-accent/50 bg-accent/8 px-4 py-3.5 text-left transition-all hover:border-accent hover:bg-accent/12 disabled:opacity-60"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/20 text-accent-hi">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-fg">
+                        {guestLoading ? 'Signing in…' : 'Try the demo'}
+                      </p>
+                      <p className="text-xs text-accent-hi/80">No signup · instant access</p>
+                    </div>
+                  </div>
+                  <svg className="text-accent-hi" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                </button>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+                  <div className="relative flex justify-center text-xs text-muted"><span className="bg-surface px-2">or sign in</span></div>
+                </div>
+
                 <div className="space-y-3">
                   <button onClick={() => setTab('login')} className="option-button group flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -130,19 +157,6 @@ export function LandingAuth() {
                     <svg className="text-muted group-hover:text-fg transition-colors" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                   </button>
                 </div>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-                  <div className="relative flex justify-center text-xs text-muted"><span className="bg-surface px-2">or</span></div>
-                </div>
-
-                <button onClick={handleGuest} disabled={guestLoading} className="btn-ghost w-full justify-center text-muted">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                  {guestLoading ? 'Signing in…' : 'Continue as guest'}
-                </button>
               </>
             )}
 
@@ -182,6 +196,9 @@ export function LandingAuth() {
                   <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="input" />
                   <input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="Password (min. 8 characters)" className="input" />
                   {error && <p className="text-xs text-danger">{error}</p>}
+                  <p className="text-[11px] text-muted-2 leading-relaxed">
+                    Your name and email are used only to personalise your reports. No marketing, no third-party sharing.
+                  </p>
                   <button type="submit" disabled={loading} className="btn-primary w-full">
                     {loading ? 'Creating account…' : 'Create account'}
                   </button>
