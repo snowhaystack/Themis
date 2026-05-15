@@ -67,7 +67,7 @@ export function LandingAuth() {
 
   return (
     <div className="relative isolate min-h-dvh flex flex-col overflow-hidden">
-      <DecorRings className="absolute right-0 top-0 -z-10 h-[32rem] w-[32rem]" />
+      <DecorRings className="absolute right-0 top-0 -z-10 h-[20rem] w-[20rem] sm:h-[32rem] sm:w-[32rem]" />
       <header className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2.5">
           <BrandMark size={22} className="text-fg" />
@@ -78,16 +78,16 @@ export function LandingAuth() {
         <ThemeToggle />
       </header>
 
-      <main className="flex flex-1 items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md space-y-8 animate-fade-in-up">
+      <main className="flex flex-1 items-center justify-center px-3 py-6 sm:px-4 sm:py-12">
+        <div className="w-full max-w-md space-y-6 sm:space-y-8 animate-fade-in-up">
 
           <div className="text-center space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/60 px-3 py-1 text-xs font-medium text-muted backdrop-blur-xl">
               <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-soft" />
               4-agent AI pipeline · Gemini 2.5
             </div>
-            <h1 className="text-4xl font-bold leading-tight text-fg" style={{ letterSpacing: '-0.03em' }}>
-              How much AI does your<br />
+            <h1 className="text-2xl sm:text-4xl font-bold leading-tight text-fg" style={{ letterSpacing: '-0.03em' }}>
+              How much AI does your{' '}
               <span className="text-gradient">business really need?</span>
             </h1>
             <p className="text-sm text-muted max-w-sm mx-auto leading-relaxed">

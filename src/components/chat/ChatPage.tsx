@@ -23,13 +23,13 @@ export function ChatPage() {
       <div className="flex h-full flex-col overflow-hidden">
 
         {/* Context bar */}
-        <div className="shrink-0 border-b border-border/50 bg-surface/40 px-6 py-3 backdrop-blur-xl">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-base font-bold text-fg" style={{ letterSpacing: '-0.01em' }}>
+        <div className="shrink-0 border-b border-border/50 bg-surface/40 px-3 py-2 sm:px-6 sm:py-3 backdrop-blur-xl">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+            <h1 className="text-sm sm:text-base font-bold text-fg" style={{ letterSpacing: '-0.01em' }}>
               How much AI do you{' '}
               <span className="text-gradient">really need?</span>
             </h1>
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="hidden sm:flex flex-wrap items-center gap-1.5">
               <span className="chip text-[11px]">
                 <span className="h-1.5 w-1.5 rounded-full bg-agent1" />
                 Gemini 2.5
@@ -48,7 +48,7 @@ export function ChatPage() {
 
         {/* Chat — centred, takes all remaining height */}
         <div className="flex-1 min-h-0 overflow-hidden">
-          <div className="flex h-full flex-col px-4 py-4 sm:px-6 sm:py-5">
+          <div className="flex h-full flex-col px-3 py-3 sm:px-6 sm:py-5">
             <ChatWindow
               onSessionCreated={() => setRefreshKey((k) => k + 1)}
               onAgentChange={setActiveAgent}

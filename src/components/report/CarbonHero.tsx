@@ -88,16 +88,16 @@ export function CarbonHero({ analyzer, rating }: Props) {
               {theme.label}
             </span>
           </div>
-          <div className="flex items-baseline gap-4">
+          <div className="flex items-baseline gap-3 sm:gap-4">
             <div
-              className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl font-display text-5xl font-bold ${theme.bg} ${theme.text} ${theme.border} border`}
+              className={`flex h-16 w-16 sm:h-24 sm:w-24 shrink-0 items-center justify-center rounded-2xl font-display text-3xl sm:text-5xl font-bold ${theme.bg} ${theme.text} ${theme.border} border`}
             >
               {rating}
             </div>
-            <div>
-              <div className="font-display text-5xl font-bold leading-none text-fg sm:text-6xl">
+            <div className="min-w-0">
+              <div className="font-display text-3xl font-bold leading-none text-fg sm:text-6xl">
                 {annual.toFixed(1)}
-                <span className="ml-2 text-2xl font-medium text-muted">
+                <span className="ml-1 sm:ml-2 text-lg sm:text-2xl font-medium text-muted">
                   kg CO₂
                 </span>
               </div>

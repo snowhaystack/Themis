@@ -17,7 +17,7 @@ export function MessageBubble({ role, children }: Props) {
         >
           <BrandMark size={16} />
         </div>
-        <div className="max-w-[50%] rounded-2xl rounded-tl-sm border border-border/60 bg-surface/80 px-4 py-3 shadow-soft backdrop-blur-xl">
+        <div className="max-w-[85%] sm:max-w-[65%] rounded-2xl rounded-tl-sm border border-border/60 bg-surface/80 px-4 py-3 shadow-soft backdrop-blur-xl">
           {children}
         </div>
       </div>
@@ -25,7 +25,7 @@ export function MessageBubble({ role, children }: Props) {
   }
   return (
     <div className="flex animate-fade-in-up justify-end">
-      <div className="max-w-[50%] rounded-2xl rounded-tr-sm bg-accent/15 px-4 py-2.5 text-sm font-medium text-fg ring-1 ring-accent/25">
+      <div className="max-w-[85%] sm:max-w-[65%] rounded-2xl rounded-tr-sm bg-accent/15 px-4 py-2.5 text-sm font-medium text-fg ring-1 ring-accent/25">
         {children}
       </div>
     </div>

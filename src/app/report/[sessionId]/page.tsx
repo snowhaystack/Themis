@@ -56,7 +56,7 @@ export default async function ReportPage(props: {
         </Link>
       }
     >
-      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto flex max-w-6xl flex-col gap-4 sm:gap-6 px-3 py-4 sm:px-6 sm:py-8">
         <ReportTitle
           sessionId={sessionId}
           initialName={
