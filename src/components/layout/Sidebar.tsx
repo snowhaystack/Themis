@@ -12,7 +12,28 @@ interface Props {
   onClose: () => void
   /** Tick this to force a refresh (e.g., after creating a session). */
   refreshKey?: number
+  /** Pipeline agent currently running (1-4), or null when idle. */
+  activeAgent?: 1 | 2 | 3 | 4 | null
 }
+
+interface WhoAmI {
+  ip: string
+  browser: string
+  os: string
+  location: string
+}
+
+const PIPELINE_AGENTS: Array<{
+  n: 1 | 2 | 3 | 4
+  label: string
+  role: string
+  bg: string
+}> = [
+  { n: 1, label: 'Disambiguator', role: 'Profiles your company', bg: 'bg-agent1' },
+  { n: 2, label: 'Analyzer', role: 'Quantifies cost & carbon', bg: 'bg-agent2' },
+  { n: 3, label: 'Decider', role: 'Picks the strategy', bg: 'bg-agent3' },
+  { n: 4, label: 'Formatter', role: 'Builds the report', bg: 'bg-agent4' },
+]
 
 const SECTOR_LABELS: Record<string, string> = {
   manifatturiero: 'Manifatturiero',
@@ -67,7 +88,12 @@ function relativeTime(iso: string): string {
   return `${d}d ago`
 }
 
-export function Sidebar({ open, onClose, refreshKey = 0 }: Props) {
+export function Sidebar({
+  open,
+  onClose,
+  refreshKey = 0,
+  activeAgent = null,
+}: Props) {
   const pathname = usePathname()
   const { data: session } = useSession()
   const canViewDashboard = session?.user?.role === 'admin' || session?.user?.role === 'guest'
@@ -75,6 +101,7 @@ export function Sidebar({ open, onClose, refreshKey = 0 }: Props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
+  const [net, setNet] = useState<WhoAmI | null>(null)
 
   const hasActive = sessions.some((s) =>
     ['analyzing', 'deciding', 'formatting'].includes(s.status)
@@ -97,6 +124,14 @@ export function Sidebar({ open, onClose, refreshKey = 0 }: Props) {
   useEffect(() => {
     void fetchSessions()
   }, [fetchSessions, refreshKey])
+
+  // Best-effort fetch of the visitor's connection details.
+  useEffect(() => {
+    fetch('/api/whoami', { cache: 'no-store' })
+      .then((r) => (r.ok ? (r.json() as Promise<WhoAmI>) : null))
+      .then((d) => setNet(d))
+      .catch(() => {})
+  }, [])
 
   // Poll while there are active sessions to surface progress in the sidebar.
   useEffect(() => {
@@ -237,6 +272,53 @@ export function Sidebar({ open, onClose, refreshKey = 0 }: Props) {
           </div>
         </div>
 
+        {/* Agent pipeline — live status of the 4-agent run */}
+        <div className="px-4 pt-4">
+          <div className="pb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
+            Pipeline
+          </div>
+          <ol>
+            {PIPELINE_AGENTS.map((a, i) => {
+              const isActive = activeAgent === a.n
+              const isLast = i === PIPELINE_AGENTS.length - 1
+              return (
+                <li key={a.n} className="flex gap-2.5">
+                  <div className="flex flex-col items-center">
+                    <span
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold transition ${
+                        isActive
+                          ? `${a.bg} text-white shadow-glow-strong`
+                          : 'bg-surface-2 text-muted-2 ring-1 ring-border'
+                      }`}
+                    >
+                      {isActive ? (
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+                      ) : (
+                        a.n
+                      )}
+                    </span>
+                    {!isLast && (
+                      <span className="sap-line-v my-1 h-4" aria-hidden="true" />
+                    )}
+                  </div>
+                  <div className="pb-2">
+                    <p
+                      className={`text-sm font-medium leading-6 ${
+                        isActive ? 'text-fg' : 'text-muted'
+                      }`}
+                    >
+                      {a.label}
+                    </p>
+                    <p className="text-[10px] leading-tight text-muted-2">
+                      {a.role}
+                    </p>
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+        </div>
+
         {/* List */}
         <div className="flex-1 overflow-hidden px-2 pt-3">
           <div className="px-2 pb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
@@ -314,23 +396,42 @@ export function Sidebar({ open, onClose, refreshKey = 0 }: Props) {
           </div>
         </div>
 
-        {/* Footer / profile */}
+        {/* Footer — the visitor's connection details */}
         <div className="border-t border-border px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-hi text-xs font-semibold text-fg">
-              ◐
+          <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
+            Your connection
+          </p>
+          {net ? (
+            <div className="space-y-1.5">
+              <NetRow label="IP" value={net.ip} />
+              <NetRow label="Location" value={net.location} />
+              <NetRow label="Client" value={`${net.browser} · ${net.os}`} />
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-medium text-fg">
-                Hackathon mode
-              </div>
-              <div className="truncate text-[10px] text-muted-2">
-                Sessioni · 1h TTL · Redis
-              </div>
+          ) : (
+            <div className="space-y-1.5">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="h-3.5 animate-pulse rounded bg-surface/60"
+                />
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </aside>
     </>
+  )
+}
+
+function NetRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-2">
+        {label}
+      </span>
+      <span className="truncate font-mono text-[11px] text-fg" title={value}>
+        {value}
+      </span>
+    </div>
   )
 }
