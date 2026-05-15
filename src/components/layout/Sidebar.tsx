@@ -279,20 +279,37 @@ export function Sidebar({
           </div>
           <ol>
             {PIPELINE_AGENTS.map((a, i) => {
-              const isActive = activeAgent === a.n
+              const state =
+                activeAgent == null
+                  ? 'pending'
+                  : a.n < activeAgent
+                    ? 'done'
+                    : a.n === activeAgent
+                      ? 'active'
+                      : 'pending'
               const isLast = i === PIPELINE_AGENTS.length - 1
               return (
                 <li key={a.n} className="flex gap-2.5">
                   <div className="flex flex-col items-center">
                     <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold transition ${
-                        isActive
-                          ? `${a.bg} text-white shadow-glow-strong`
-                          : 'bg-surface-2 text-muted-2 ring-1 ring-border'
+                      className={`relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold transition ${
+                        state === 'done'
+                          ? 'bg-success text-white'
+                          : state === 'active'
+                            ? `${a.bg} text-white shadow-glow-strong`
+                            : 'bg-surface-2 text-muted-2 ring-1 ring-border'
                       }`}
                     >
-                      {isActive ? (
-                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+                      {state === 'active' && (
+                        <span
+                          className={`absolute inset-0 animate-ping rounded-full ${a.bg} opacity-60`}
+                          aria-hidden="true"
+                        />
+                      )}
+                      {state === 'done' ? (
+                        '✓'
+                      ) : state === 'active' ? (
+                        <span className="relative h-1.5 w-1.5 rounded-full bg-white" />
                       ) : (
                         a.n
                       )}
@@ -304,7 +321,7 @@ export function Sidebar({
                   <div className="pb-2">
                     <p
                       className={`text-sm font-medium leading-6 ${
-                        isActive ? 'text-fg' : 'text-muted'
+                        state === 'pending' ? 'text-muted' : 'text-fg'
                       }`}
                     >
                       {a.label}
