@@ -56,9 +56,17 @@ PER-ROLE DATA COLLECTION (mandatory):
 
 role_count question:
 - Phrase: "How many <Role Name> will actively use AI?" — name the role in the question text.
-- Options (closed brackets): "1", "2-3", "4-7", "8-15", "16-30", "30+".
+- The FULL bracket set is: "1", "2-3", "4-7", "8-15", "16-30", "30+".
 - multiSelect=false.
-- In final "output.roles", use the MIDPOINT of the chosen bracket as 'count' (e.g. "2-3" → 2, "4-7" → 5, "8-15" → 11, "16-30" → 23, "30+" → 40).
+- In final "output.roles", use the MIDPOINT of the chosen bracket as 'count' (e.g. "1" → 1, "2-3" → 2, "4-7" → 5, "8-15" → 11, "16-30" → 23, "30+" → 40).
+
+EMPLOYEE-RANGE CAP for role_count options (mandatory):
+- The employee range tells you the MAXIMUM total headcount. Compute its upper bound (e.g. "1-9" → 9, "10-49" → 49, "50-249" → 249, "250-999" → 999, "1000+" → no cap).
+- Sum the midpoints of role_count brackets already answered in the history. Call this "allocated".
+- The remaining budget is upperBound − allocated.
+- When presenting a new role_count question, ONLY include brackets whose midpoint ≤ remaining budget. Drop any bracket that would push the total over the cap.
+- If no bracket fits, offer only "1".
+- Example: range "1-9" (cap 9), first role answered "4-7" (allocated=5) → remaining=4, so next role options are only "1", "2-3" (midpoint 2 ≤ 4). Do NOT show "4-7" or higher.
 
 role_frequency question:
 - Phrase: "How often will <Role Name> use AI?" — name the role in the question text.
@@ -235,12 +243,37 @@ function sizeFromRange(range: string): CompanySize {
   return 'enterprise'
 }
 
+function sizeFromCount(count: number): CompanySize {
+  if (count <= 9) return 'artigiano'
+  if (count <= 49) return 'piccola_azienda'
+  if (count <= 249) return 'media_azienda'
+  return 'enterprise'
+}
+
+function adjustOutputForRoleCounts(
+  output: z.infer<typeof DisambiguatorOutputSchema>
+): z.infer<typeof DisambiguatorOutputSchema> {
+  const totalFromRoles = output.roles.reduce((sum, r) => sum + r.count, 0)
+  if (totalFromRoles <= output.company.employeeCount) return output
+
+  const adjusted = Math.max(totalFromRoles, output.company.employeeCount)
+  return {
+    ...output,
+    company: {
+      ...output.company,
+      employeeCount: adjusted,
+      size: sizeFromCount(adjusted),
+    },
+    activeUsers: Math.max(output.activeUsers, totalFromRoles),
+  }
+}
+
 function flatToChatResponse(flat: FlatDisambiguatorResponse): ChatResponse {
   if (flat.done) {
     if (!flat.output) {
       throw new Error('Disambiguator: done=true but output missing')
     }
-    return { done: true, output: flat.output }
+    return { done: true, output: adjustOutputForRoleCounts(flat.output) }
   }
   return {
     done: false,
@@ -272,10 +305,32 @@ export async function runDisambiguator({
           )
           .join('\n')
 
+  const rangeUpper = state.employeeRange === '1000+'
+    ? Infinity
+    : Number(state.employeeRange.split('-')[1])
+
+  const BRACKET_MIDPOINTS: Record<string, number> = {
+    '1': 1, '2-3': 2, '4-7': 5, '8-15': 11, '16-30': 23, '30+': 40,
+  }
+  const allocatedFromRoles = state.history
+    .filter((t) => t.questionKey === 'role_count')
+    .reduce((sum, t) => {
+      const val = t.selectedOptions[0] ?? ''
+      return sum + (BRACKET_MIDPOINTS[val] ?? 0)
+    }, 0)
+  const remainingBudget = Number.isFinite(rangeUpper)
+    ? rangeUpper - allocatedFromRoles
+    : Infinity
+
+  const budgetLine = Number.isFinite(remainingBudget)
+    ? `- Headcount budget remaining: ${remainingBudget} (upper bound ${rangeUpper}, already allocated ${allocatedFromRoles})`
+    : '- Headcount budget: uncapped (1000+)'
+
   const prompt = `COMPANY CONTEXT:
 - Sector: ${state.sector}
 - Employee range: ${state.employeeRange} (use employeeCount=${employeeMid})
 - Suggested size: ${suggestedSize}
+${budgetLine}
 
 CONVERSATION HISTORY:
 ${historyText}

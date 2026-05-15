@@ -15,7 +15,35 @@ import {
 import { runAnalyzer } from './analyzer'
 import { runDecider } from './decider'
 import { runFormatter } from './formatter'
+import { evaluateAnalyzer, evaluateDecider, type EvalResult } from './evaluator'
 import { createUsageCollector } from '@/server/infrastructure/gemini/usage'
+
+/**
+ * Runs an agent, sanity-checks its output, and retries ONCE if the check
+ * fails. After a failed retry it proceeds anyway — a slightly imperfect
+ * report beats a hard crash. The check is deterministic (no extra LLM call).
+ */
+async function runWithEval<T>(
+  label: string,
+  run: () => Promise<T>,
+  evaluate: (out: T) => EvalResult
+): Promise<T> {
+  let out = await run()
+  let result = evaluate(out)
+  if (result.ok) return out
+
+  console.warn(
+    `[ORCH] ${label} validation failed: ${result.issues.join(' · ')} — retrying once`
+  )
+  out = await run()
+  result = evaluate(out)
+  if (!result.ok) {
+    console.warn(
+      `[ORCH] ${label} still imperfect after retry: ${result.issues.join(' · ')} — proceeding`
+    )
+  }
+  return out
+}
 
 export async function loadSession(
   sessionId: string
@@ -83,22 +111,31 @@ export async function runPipeline(sessionId: string): Promise<void> {
     if (!current || !current.disambiguator) {
       throw new Error('Sessione non trovata o priva di disambiguator output')
     }
+    const disambiguator = current.disambiguator
 
     await saveSession({ ...current, status: 'analyzing' })
-    const analyzer = await runAnalyzer(current.disambiguator, collector)
+    const analyzer = await runWithEval(
+      'analyzer',
+      () => runAnalyzer(disambiguator, collector),
+      (out) => evaluateAnalyzer(out, disambiguator)
+    )
     console.log(`[ORCH] analyzer done (${Date.now() - start}ms)`)
 
     let withAnalyzer = await loadSession(sessionId)
     if (!withAnalyzer) throw new Error('Sessione persa durante analyze')
     await saveSession({ ...withAnalyzer, status: 'deciding', analyzer })
-    const decider = await runDecider(current.disambiguator, analyzer, collector)
+    const decider = await runWithEval(
+      'decider',
+      () => runDecider(disambiguator, analyzer, collector),
+      (out) => evaluateDecider(out)
+    )
     console.log(`[ORCH] decider done (${Date.now() - start}ms)`)
 
     let withDecider = await loadSession(sessionId)
     if (!withDecider) throw new Error('Sessione persa durante decide')
     await saveSession({ ...withDecider, status: 'formatting', analyzer, decider })
     const report = await runFormatter(
-      { disambiguator: current.disambiguator, analyzer, decider },
+      { disambiguator, analyzer, decider },
       collector
     )
     console.log(`[ORCH] formatter done (${Date.now() - start}ms)`)
