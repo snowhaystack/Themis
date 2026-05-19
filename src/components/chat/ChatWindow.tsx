@@ -171,8 +171,8 @@ function AgentMeta({ elapsedMs, tokens }: { elapsedMs?: number; tokens?: number 
         </span>
       )}
       {tokens !== undefined && tokens > 0 && (
-        <span className="flex items-center gap-1 text-emerald-400">
-          🌳 {treeHoursFromTokens(tokens)}
+        <span className="flex items-center gap-1 text-emerald-400" title="Hours of one tree's CO₂ absorption needed to offset this response">
+          🌳 {treeHoursFromTokens(tokens)} <span className="text-muted-2">tree absorption</span>
         </span>
       )}
     </div>
