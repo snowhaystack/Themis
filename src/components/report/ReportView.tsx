@@ -368,13 +368,15 @@ export function ReportView({
       />
 
       {/* Cost breakdown with multi-provider models */}
-      <CostBreakdown analyzer={analyzer} />
+      <div className="print-page-break">
+        <CostBreakdown analyzer={analyzer} />
+      </div>
 
       {/* Per-role impact analysis */}
       <RoleImpact analyzer={analyzer} />
 
       {/* Decisions */}
-      <section>
+      <section className="print-page-break">
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
           Strategic decisions
         </h3>
@@ -387,7 +389,7 @@ export function ReportView({
 
       {/* Dynamic sections from Agent 4 */}
       {report.sections.length > 0 && (
-        <section>
+        <section className="print-page-break">
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
             Deep dives
           </h3>
@@ -424,7 +426,7 @@ export function ReportView({
 
       {/* Final recommendations */}
       {report.recommendations.length > 0 && (
-        <section>
+        <section className="print-page-break">
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
             Final recommendations
           </h3>
