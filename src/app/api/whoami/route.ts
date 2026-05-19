@@ -7,7 +7,16 @@ export interface WhoAmI {
   ip: string
   browser: string
   os: string
+  device: string
+  engine: string
   location: string
+  isp: string
+  timezone: string
+  lat: string
+  lon: string
+  lang: string
+  connection: string
+  screenHint: string
 }
 
 function clientIp(req: NextRequest): string {
@@ -34,7 +43,20 @@ export async function GET(req: NextRequest) {
     [ua.browser.name, ua.browser.version].filter(Boolean).join(' ') || 'Unknown'
   const os = [ua.os.name, ua.os.version].filter(Boolean).join(' ') || 'Unknown'
 
+  const device = ua.device.type
+    ? `${ua.device.vendor ?? ''} ${ua.device.model ?? ''} (${ua.device.type})`.trim()
+    : 'Desktop'
+  const engine = [ua.engine.name, ua.engine.version].filter(Boolean).join(' ') || 'Unknown'
+  const lang = req.headers.get('accept-language')?.split(',')[0]?.trim() ?? 'Unknown'
+  const connection = req.headers.get('connection') ?? 'Unknown'
+  const screenHint = req.headers.get('sec-ch-ua-platform') ?? os
+
   let location = 'Unknown'
+  let isp = 'Unknown'
+  let timezone = 'Unknown'
+  let lat = ''
+  let lon = ''
+
   if (!isPrivate(ip)) {
     try {
       const r = await fetch(`https://ipapi.co/${encodeURIComponent(ip)}/json/`, {
@@ -44,16 +66,38 @@ export async function GET(req: NextRequest) {
       if (r.ok) {
         const d = (await r.json()) as {
           city?: string
+          region?: string
           country_name?: string
+          org?: string
+          timezone?: string
+          latitude?: number
+          longitude?: number
         }
-        location =
-          [d.city, d.country_name].filter(Boolean).join(', ') || 'Unknown'
+        location = [d.city, d.region, d.country_name].filter(Boolean).join(', ') || 'Unknown'
+        isp = d.org ?? 'Unknown'
+        timezone = d.timezone ?? 'Unknown'
+        lat = d.latitude?.toFixed(4) ?? ''
+        lon = d.longitude?.toFixed(4) ?? ''
       }
     } catch {
-      // geo lookup is best-effort — leave as Unknown on failure
+      // geo lookup is best-effort
     }
   }
 
-  const body: WhoAmI = { ip: ip || 'Unknown', browser, os, location }
+  const body: WhoAmI = {
+    ip: ip || 'Unknown',
+    browser,
+    os,
+    device,
+    engine,
+    location,
+    isp,
+    timezone,
+    lat,
+    lon,
+    lang,
+    connection,
+    screenHint,
+  }
   return NextResponse.json(body)
 }
