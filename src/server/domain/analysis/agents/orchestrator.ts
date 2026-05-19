@@ -9,7 +9,6 @@ import {
 import { indexSessionForUser } from '@/server/domain/identity/users'
 import {
   type DisambiguatorOutput,
-  type FreeTierCounter,
   type SessionRecord,
   SessionRecordSchema,
 } from '@/shared/types'
@@ -23,11 +22,10 @@ import {
   checkAnalyzer,
   checkDecider,
   checkReport,
+  checkPipelineConsistency,
   buildSupervisorReport,
 } from './supervisor'
 import { createUsageCollector } from '@/server/infrastructure/gemini/usage'
-
-const FREE_TIER_TOKEN_BUDGET = 1_500_000
 
 /**
  * Runs an agent, sanity-checks its output, and retries ONCE if the check
@@ -113,20 +111,6 @@ export async function createSession(
 
 export { deindexSession }
 
-function computeFreeTier(totalTokens: number, elapsedMs: number): FreeTierCounter {
-  const remaining = Math.max(0, FREE_TIER_TOKEN_BUDGET - totalTokens)
-  const elapsedHours = elapsedMs / 3_600_000
-  const tokensPerHour = elapsedHours > 0 ? totalTokens / elapsedHours : totalTokens
-  const hoursLeft = tokensPerHour > 0 ? remaining / tokensPerHour : 0
-  return {
-    totalTokensUsed: totalTokens,
-    freeTokenBudget: FREE_TIER_TOKEN_BUDGET,
-    estimatedFreeHoursLeft: Math.round(hoursLeft * 10) / 10,
-    tokensPerHourAvg: Math.round(tokensPerHour),
-    updatedAt: new Date().toISOString(),
-  }
-}
-
 export async function runPipeline(sessionId: string): Promise<void> {
   console.log(`[ORCH] start pipeline session=${sessionId}`)
   const start = Date.now()
@@ -184,14 +168,15 @@ export async function runPipeline(sessionId: string): Promise<void> {
     console.log(`[SUPERVISOR] decider: ${deciderChecks.filter(c => c.passed).length}/${deciderChecks.length} passed`)
     console.log(`[ORCH] formatter done (${Date.now() - start}ms)`)
 
-    // Final supervisor check on the completed report
+    // Final supervisor checks: report quality + pipeline consistency
+    const usage = collector.summary()
     const reportChecks = checkReport(report, decider, analyzer)
-    allChecks.push(...reportChecks)
+    const pipelineChecks = checkPipelineConsistency(usage, analyzer)
+    allChecks.push(...reportChecks, ...pipelineChecks)
     console.log(`[SUPERVISOR] report: ${reportChecks.filter(c => c.passed).length}/${reportChecks.length} passed`)
+    console.log(`[SUPERVISOR] pipeline consistency: ${pipelineChecks.filter(c => c.passed).length}/${pipelineChecks.length} passed`)
 
     const supervisorReport = buildSupervisorReport(allChecks)
-    const usage = collector.summary()
-    const freeTier = computeFreeTier(usage.totals.total, Date.now() - start)
 
     let withReport = await loadSession(sessionId)
     if (!withReport) throw new Error('Session lost during format phase')
@@ -203,7 +188,6 @@ export async function runPipeline(sessionId: string): Promise<void> {
       report,
       pipelineUsage: usage,
       supervisor: supervisorReport,
-      freeTier,
     })
     console.log(
       `[ORCH] pipeline COMPLETE session=${sessionId} total=${Date.now() - start}ms · ${
