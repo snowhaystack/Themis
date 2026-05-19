@@ -20,7 +20,16 @@ interface WhoAmI {
   ip: string
   browser: string
   os: string
+  device: string
+  engine: string
   location: string
+  isp: string
+  timezone: string
+  lat: string
+  lon: string
+  lang: string
+  connection: string
+  screenHint: string
 }
 
 const PIPELINE_AGENTS: Array<{
@@ -422,20 +431,38 @@ export function Sidebar({
           </div>
         </div>
 
-        {/* Footer — the visitor's connection details */}
+        {/* Footer — digital fingerprint awareness panel */}
         <div className="border-t border-border px-4 py-3">
-          <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
-            Your connection
-          </p>
+          <div className="mb-2 flex items-center gap-1.5">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-danger animate-pulse" />
+            <p className="font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-danger/80">
+              Your digital trace
+            </p>
+          </div>
           {net ? (
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <NetRow label="IP" value={net.ip} />
               <NetRow label="Location" value={net.location} />
-              <NetRow label="Client" value={`${net.browser} · ${net.os}`} />
+              {net.lat && net.lon && (
+                <NetRow label="Coords" value={`${net.lat}, ${net.lon}`} />
+              )}
+              <NetRow label="ISP" value={net.isp} />
+              <NetRow label="Timezone" value={net.timezone} />
+              <NetRow label="Browser" value={net.browser} />
+              <NetRow label="Engine" value={net.engine} />
+              <NetRow label="OS" value={net.os} />
+              <NetRow label="Device" value={net.device} />
+              <NetRow label="Platform" value={net.screenHint} />
+              <NetRow label="Language" value={net.lang} />
+              <div className="pt-1.5">
+                <p className="text-[9px] leading-relaxed text-danger/60">
+                  All of this is visible to every website you visit. Stay aware.
+                </p>
+              </div>
             </div>
           ) : (
             <div className="space-y-1.5">
-              {[0, 1, 2].map((i) => (
+              {[0, 1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
                   className="h-3.5 animate-pulse rounded bg-surface/60"
