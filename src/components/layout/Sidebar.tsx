@@ -24,11 +24,12 @@ interface WhoAmI {
 }
 
 const PIPELINE_AGENTS: Array<{
-  n: 1 | 2 | 3 | 4
+  n: 0 | 1 | 2 | 3 | 4
   label: string
   role: string
   bg: string
 }> = [
+  { n: 0, label: 'Supervisor', role: 'Quality checks in parallel', bg: 'bg-supervisor' },
   { n: 1, label: 'Disambiguator', role: 'Profiles your company', bg: 'bg-agent1' },
   { n: 2, label: 'Analyzer', role: 'Quantifies cost & carbon', bg: 'bg-agent2' },
   { n: 3, label: 'Decider', role: 'Picks the strategy', bg: 'bg-agent3' },
@@ -36,18 +37,18 @@ const PIPELINE_AGENTS: Array<{
 ]
 
 const SECTOR_LABELS: Record<string, string> = {
-  manifatturiero: 'Manifatturiero',
+  manifatturiero: 'Manufacturing',
   fintech: 'Fintech',
   retail: 'Retail',
-  sanitario: 'Sanitario',
+  sanitario: 'Healthcare',
   education: 'Education',
-  servizi_professionali: 'Servizi prof.',
-  logistica: 'Logistica',
-  energia_utilities: 'Energia',
+  servizi_professionali: 'Prof. services',
+  logistica: 'Logistics',
+  energia_utilities: 'Energy',
   agritech: 'Agritech',
   media_entertainment: 'Media',
-  pubblica_amministrazione: 'PA',
-  altro: 'Altro',
+  pubblica_amministrazione: 'Public admin',
+  altro: 'Other',
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -166,7 +167,7 @@ export function Sidebar({
         className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col overflow-y-auto border-r border-border bg-bg-elev/85 backdrop-blur-2xl transition-transform duration-200 ease-out lg:z-0 lg:h-dvh lg:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
-        aria-label="Cronologia chat"
+        aria-label="Chat history"
       >
         {/* Brand */}
         <div className="flex items-center justify-between gap-2 px-4 pt-4">
@@ -177,7 +178,7 @@ export function Sidebar({
             type="button"
             className="btn-icon lg:hidden"
             onClick={onClose}
-            aria-label="Chiudi sidebar"
+            aria-label="Close sidebar"
           >
             <svg
               width="16"
@@ -215,7 +216,7 @@ export function Sidebar({
             >
               <path d="M12 5v14M5 12h14" />
             </svg>
-            Nuova analisi
+            New analysis
           </Link>
         </div>
 
@@ -264,23 +265,29 @@ export function Sidebar({
             <input
               type="search"
               className="input pl-8"
-              placeholder="Cerca settore…"
+              placeholder="Search sector…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              aria-label="Filtra cronologia"
+              aria-label="Filter history"
             />
           </div>
         </div>
 
-        {/* Agent pipeline — live status of the 4-agent run */}
+        {/* Agent pipeline — live status of the 5-agent run (supervisor + 4 agents) */}
         <div className="px-4 pt-4">
           <div className="pb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
             Pipeline
           </div>
           <ol>
             {PIPELINE_AGENTS.map((a, i) => {
-              const state =
-                activeAgent == null
+              const isSupervisor = a.n === 0
+              const state = isSupervisor
+                ? activeAgent == null
+                  ? 'pending'
+                  : activeAgent >= 1 && activeAgent <= 3
+                    ? 'active'
+                    : 'done'
+                : activeAgent == null
                   ? 'pending'
                   : a.n < activeAgent
                     ? 'done'
@@ -310,6 +317,8 @@ export function Sidebar({
                         '✓'
                       ) : state === 'active' ? (
                         <span className="relative h-1.5 w-1.5 rounded-full bg-white" />
+                      ) : isSupervisor ? (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                       ) : (
                         a.n
                       )}
@@ -339,7 +348,7 @@ export function Sidebar({
         {/* List */}
         <div className="flex-1 overflow-hidden px-2 pt-3">
           <div className="px-2 pb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
-            Cronologia
+            History
           </div>
           <div className="h-full overflow-y-auto pb-4 pr-1">
             {loading && (
