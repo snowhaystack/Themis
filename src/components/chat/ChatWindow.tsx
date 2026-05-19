@@ -146,6 +146,14 @@ function formatHMS(ts: number): string {
   })
 }
 
+function treeHoursFromTokens(tokens: number): string {
+  const carbonKg = (tokens / 1000) * 0.0003
+  const treeHoursRaw = carbonKg / (21 / 365 / 24)
+  if (treeHoursRaw < 0.01) return '<0.01h'
+  if (treeHoursRaw < 1) return `${treeHoursRaw.toFixed(2)}h`
+  return `${treeHoursRaw.toFixed(1)}h`
+}
+
 function AgentMeta({ elapsedMs, tokens }: { elapsedMs?: number; tokens?: number }) {
   if (!elapsedMs && !tokens) return null
   return (
@@ -160,6 +168,11 @@ function AgentMeta({ elapsedMs, tokens }: { elapsedMs?: number; tokens?: number 
         <span className="flex items-center gap-1">
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
           {tokens.toLocaleString()} tok
+        </span>
+      )}
+      {tokens !== undefined && tokens > 0 && (
+        <span className="flex items-center gap-1 text-emerald-400">
+          🌳 {treeHoursFromTokens(tokens)}
         </span>
       )}
     </div>
