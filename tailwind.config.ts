@@ -22,6 +22,7 @@ const config: Config = {
         agent2: 'rgb(var(--agent2) / <alpha-value>)',
         agent3: 'rgb(var(--agent3) / <alpha-value>)',
         agent4: 'rgb(var(--agent4) / <alpha-value>)',
+        supervisor: 'rgb(var(--supervisor) / <alpha-value>)',
         success: 'rgb(var(--success) / <alpha-value>)',
         warning: 'rgb(var(--warning) / <alpha-value>)',
         danger: 'rgb(var(--danger) / <alpha-value>)',

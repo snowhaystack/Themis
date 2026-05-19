@@ -22,11 +22,12 @@
   --accent: 139 92 246;      /* violet-500 — bridge to brand */
   --accent-hi: 167 139 250;
 
-  /* 4-agent gradient: cyan → violet → pink → amber */
+  /* 4-agent gradient: cyan → violet → pink → amber + supervisor */
   --agent1: 34 211 238;      /* cyan-400 */
   --agent2: 139 92 246;      /* violet-500 */
   --agent3: 236 72 153;      /* pink-500 */
   --agent4: 245 158 11;      /* amber-500 */
+  --supervisor: 16 185 129;  /* emerald-500 */
 
   --success: 16 185 129;
   --warning: 245 158 11;
@@ -52,6 +53,7 @@ html.light {
   --agent2: 124 58 237;
   --agent3: 219 39 119;
   --agent4: 217 119 6;
+  --supervisor: 5 150 105;
   color-scheme: light;
 }
 

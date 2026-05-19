@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 /* ============================================================
- *  CONDIVISI
+ *  SHARED
  * ============================================================ */
 
 export const CompanySizeSchema = z.enum([
@@ -29,7 +29,7 @@ export const CarbonRatingSchema = z.enum(['A', 'B', 'C', 'D', 'E'])
 export type CarbonRating = z.infer<typeof CarbonRatingSchema>
 
 /* ============================================================
- *  AGENTE 1 — DISAMBIGUATORE
+ *  AGENT 1 — DISAMBIGUATOR
  * ============================================================ */
 
 export const SECTORS = [
@@ -51,9 +51,9 @@ export const SectorSchema = z.enum(SECTORS)
 export type Sector = z.infer<typeof SectorSchema>
 
 export const EMPLOYEE_RANGES = [
-  { value: '1-9', label: '1–9 (artigiano)', mid: 5 },
-  { value: '10-49', label: '10–49 (piccola)', mid: 25 },
-  { value: '50-249', label: '50–249 (media)', mid: 120 },
+  { value: '1-9', label: '1–9 (micro)', mid: 5 },
+  { value: '10-49', label: '10–49 (small)', mid: 25 },
+  { value: '50-249', label: '50–249 (medium)', mid: 120 },
   { value: '250-999', label: '250–999 (enterprise)', mid: 500 },
   { value: '1000+', label: '1000+ (enterprise)', mid: 2000 },
 ] as const
@@ -131,7 +131,7 @@ export const ChatResponseSchema = z.discriminatedUnion('done', [
 export type ChatResponse = z.infer<typeof ChatResponseSchema>
 
 /* ============================================================
- *  AGENTE 2 — ANALIZZATORE
+ *  AGENT 2 — ANALYZER
  * ============================================================ */
 
 export const ModelProviderSchema = z.enum(['google', 'anthropic', 'openai'])
@@ -192,7 +192,7 @@ export const AnalyzerOutputSchema = z.object({
 export type AnalyzerOutput = z.infer<typeof AnalyzerOutputSchema>
 
 /* ============================================================
- *  AGENTE 3 — DECISIONALE
+ *  AGENT 3 — DECIDER
  * ============================================================ */
 
 export const DecisionSchema = z.object({
@@ -215,7 +215,7 @@ export const DeciderOutputSchema = z.object({
 export type DeciderOutput = z.infer<typeof DeciderOutputSchema>
 
 /* ============================================================
- *  AGENTE 4 — FORMATTATORE
+ *  AGENT 4 — FORMATTER
  * ============================================================ */
 
 export const ReportSectionSchema = z.discriminatedUnion('type', [
@@ -284,6 +284,39 @@ export const FinalReportSchema = z.object({
 export type FinalReport = z.infer<typeof FinalReportSchema>
 
 /* ============================================================
+ *  SUPERVISOR
+ * ============================================================ */
+
+export const SupervisorCheckSchema = z.object({
+  gate: z.string(),
+  passed: z.boolean(),
+  message: z.string(),
+})
+export type SupervisorCheck = z.infer<typeof SupervisorCheckSchema>
+
+export const SupervisorReportSchema = z.object({
+  checks: z.array(SupervisorCheckSchema),
+  passed: z.number().int().min(0),
+  failed: z.number().int().min(0),
+  score: z.number().min(0).max(100),
+  completedAt: z.string(),
+})
+export type SupervisorReport = z.infer<typeof SupervisorReportSchema>
+
+/* ============================================================
+ *  FREE-TIER COUNTER
+ * ============================================================ */
+
+export const FreeTierCounterSchema = z.object({
+  totalTokensUsed: z.number().min(0),
+  freeTokenBudget: z.number().min(0),
+  estimatedFreeHoursLeft: z.number().min(0),
+  tokensPerHourAvg: z.number().min(0),
+  updatedAt: z.string(),
+})
+export type FreeTierCounter = z.infer<typeof FreeTierCounterSchema>
+
+/* ============================================================
  *  SESSION (Redis)
  * ============================================================ */
 
@@ -329,6 +362,8 @@ export const SessionRecordSchema = z.object({
   decider: DeciderOutputSchema.optional(),
   report: FinalReportSchema.optional(),
   pipelineUsage: PipelineUsageSchema.optional(),
+  supervisor: SupervisorReportSchema.optional(),
+  freeTier: FreeTierCounterSchema.optional(),
   error: z.string().optional(),
 })
 export type SessionRecord = z.infer<typeof SessionRecordSchema>

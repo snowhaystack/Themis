@@ -24,18 +24,18 @@ type Phase =
 type PipelinePhase = 'analyzing' | 'deciding' | 'formatting'
 
 const SECTOR_LABELS: Record<Sector, string> = {
-  manifatturiero: 'Manifatturiero',
+  manifatturiero: 'Manufacturing',
   fintech: 'Fintech',
   retail: 'Retail / E-commerce',
-  sanitario: 'Sanitario / Healthcare',
+  sanitario: 'Healthcare',
   education: 'Education',
-  servizi_professionali: 'Servizi professionali',
-  logistica: 'Logistica / Supply chain',
-  energia_utilities: 'Energia / Utilities',
+  servizi_professionali: 'Professional services',
+  logistica: 'Logistics / Supply chain',
+  energia_utilities: 'Energy / Utilities',
   agritech: 'Agritech',
   media_entertainment: 'Media / Entertainment',
-  pubblica_amministrazione: 'Pubblica amministrazione',
-  altro: 'Altro',
+  pubblica_amministrazione: 'Public administration',
+  altro: 'Other',
 }
 
 interface MessageBlock {
@@ -100,25 +100,33 @@ const PHASE_TICKS: Record<PipelinePhase, string[]> = {
   analyzing: [
     'Estimating token usage per role…',
     'Distributing load across use cases…',
+    '[SUPERVISOR] validating disambiguator inputs…',
     'Picking primary + alternative providers…',
     'Computing monthly and annual costs…',
+    '[SUPERVISOR] checking role/employee consistency…',
     'Computing carbon footprint per model…',
     'Computing EU rating A–E…',
   ],
   deciding: [
     'Evaluating multi-provider stack options…',
+    '[SUPERVISOR] cross-checking analyzer costs & models…',
     'Balancing cost / reliability / CO₂…',
     'Computing ROI in months…',
+    '[SUPERVISOR] verifying carbon rating thresholds…',
     'Identifying implementation risks…',
     'Drafting carbon optimization tips…',
+    '[SUPERVISOR] validating cost-per-employee range…',
     'Selecting relevant case studies…',
   ],
   formatting: [
     'Composing executive summary…',
+    '[SUPERVISOR] validating decision substantiveness…',
     'Generating typed report sections…',
     'Picking market benchmarks…',
+    '[SUPERVISOR] checking ROI plausibility…',
     'Formatting KPI metrics…',
     'Finalizing recommendations…',
+    '[SUPERVISOR] computing free-tier usage estimate…',
   ],
 }
 
@@ -319,7 +327,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
     logScrollRef.current?.scrollTo({ top: 1e9, behavior: 'smooth' })
   }, [logEntries])
 
-  // Live tick mentre l'API /chat è in corso (per indicator "API in azione")
+  // Live tick while /chat API is in progress
   useEffect(() => {
     if (!(pending && phase === 'chatting')) {
       setChatTickMs(0)
@@ -408,9 +416,9 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
 
       if (data.done) {
         setDisambiguatorOutput(data.output)
-        const defaultName = `Piano AI · ${
+        const defaultName = `AI Plan · ${
           SECTOR_LABELS[sector] ?? sector
-        } · ${new Date().toLocaleDateString('it-IT', {
+        } · ${new Date().toLocaleDateString('en-GB', {
           day: '2-digit',
           month: '2-digit',
           year: '2-digit',
@@ -459,6 +467,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
     tickIndexRef.current = 0
 
     pushLog({ level: 'event', text: '🚀 Pipeline started · session created' })
+    pushLog({ level: 'event', text: '🛡️ [SUPERVISOR] monitoring pipeline quality in parallel' })
     pushLog({
       level: 'event',
       agent: 2,
@@ -525,6 +534,18 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
         }
 
         if (session.status === 'done') {
+          if (session.supervisor) {
+            pushLog({
+              level: 'done',
+              text: `🛡️ [SUPERVISOR] quality score: ${session.supervisor.score}% (${session.supervisor.passed}/${session.supervisor.passed + session.supervisor.failed} checks passed)`,
+            })
+          }
+          if (session.freeTier) {
+            pushLog({
+              level: 'event',
+              text: `⏱️ Free tier: ~${session.freeTier.estimatedFreeHoursLeft}h of activity remaining`,
+            })
+          }
           pushLog({
             level: 'done',
             text: '✅ Report ready · redirecting…',
@@ -640,7 +661,7 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
             </MessageBubble>
           ))}
 
-          {/* Errore */}
+          {/* Error */}
           {phase === 'error' && (
             <MessageBubble role="agent">
               <p className="text-sm font-semibold text-danger">Something went wrong</p>
@@ -734,6 +755,17 @@ export function ChatWindow({ onSessionCreated, onAgentChange }: Props = {}) {
             </div>
 
             <ol className="shrink-0 space-y-2.5">
+              {/* Supervisor — always active in parallel */}
+              <li className="flex items-center gap-3 text-sm">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-supervisor text-white text-xs font-semibold ring-1 ring-transparent shadow-glow-strong">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </span>
+                <span className="flex-1 text-fg">Supervisor</span>
+                <span className="font-mono text-[10px] text-supervisor">PARALLEL</span>
+                <span className="text-xs text-muted">quality checks</span>
+                <span className="ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-supervisor" />
+              </li>
+
               {PIPELINE_STEPS.map((s, i) => {
                 const state =
                   i < pipelineStep

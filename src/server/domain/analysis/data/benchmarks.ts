@@ -12,7 +12,7 @@ export const BENCHMARKS: BenchmarkCase[] = [
     sector: 'fintech',
     useCase: 'customer_support',
     outcome:
-      'Assistente AI gestisce ~2/3 delle conversazioni clienti, equivalente a 700 FTE, con tempo medio di risoluzione ridotto da 11 a 2 minuti.',
+      'AI assistant handles ~2/3 of customer conversations, equivalent to 700 FTE, with average resolution time reduced from 11 to 2 minutes.',
     source: 'Klarna press release, feb 2024',
   },
   {
@@ -20,7 +20,7 @@ export const BENCHMARKS: BenchmarkCase[] = [
     sector: 'servizi_professionali',
     useCase: 'customer_support',
     outcome:
-      "97% delle richieste clienti gestite da agente AI, con costi operativi ridotti di circa l'40%.",
+      '97% of customer requests handled by AI agent, with operating costs reduced by approximately 40%.',
     source: 'Air India case study, 2024',
   },
   {
@@ -28,7 +28,7 @@ export const BENCHMARKS: BenchmarkCase[] = [
     sector: 'servizi_professionali',
     useCase: 'sviluppo_software',
     outcome:
-      "Sviluppatori riportano +55% velocità di completamento dei task ripetitivi e -50% tempo speso su boilerplate.",
+      'Developers report +55% completion speed on repetitive tasks and -50% time spent on boilerplate.',
     source: 'GitHub research 2023',
   },
   {
@@ -44,7 +44,7 @@ export const BENCHMARKS: BenchmarkCase[] = [
     sector: 'sanitario',
     useCase: 'analisi_documenti',
     outcome:
-      'Ricercatori usano LLM per sintetizzare letteratura scientifica: tempo medio di review tagliato di ~30%.',
+      'Researchers use LLMs to synthesize scientific literature: average review time cut by ~30%.',
     source: 'Bayer R&D 2024',
   },
   {
@@ -52,7 +52,7 @@ export const BENCHMARKS: BenchmarkCase[] = [
     sector: 'retail',
     useCase: 'analisi_immagini',
     outcome:
-      'Tool di virtual try-on con AI ha aumentato conversion rate e-commerce del 60% su categorie make-up.',
+      'AI-powered virtual try-on tool increased e-commerce conversion rate by 60% on make-up categories.',
     source: "L'Oréal earnings call 2024",
   },
   {
@@ -60,7 +60,7 @@ export const BENCHMARKS: BenchmarkCase[] = [
     sector: 'manifatturiero',
     useCase: 'flussi_aziendali',
     outcome:
-      "Industrial copilot per operatori di linea: -30% tempo medio di diagnosi guasto e -20% tempo di formazione nuovi assunti.",
+      'Industrial copilot for line operators: -30% average fault diagnosis time and -20% new hire training time.',
     source: 'Siemens Industrial AI 2024',
   },
   {
@@ -68,7 +68,7 @@ export const BENCHMARKS: BenchmarkCase[] = [
     sector: 'education',
     useCase: 'helper_dipendenti',
     outcome:
-      'AI tutor "Max" personalizza i percorsi: +5pt engagement medio settimanale, paying subscribers +54% YoY.',
+      'AI tutor "Max" personalises learning paths: +5pt average weekly engagement, paying subscribers +54% YoY.',
     source: 'Duolingo Q2 2024 letter',
   },
   {
@@ -76,7 +76,7 @@ export const BENCHMARKS: BenchmarkCase[] = [
     sector: 'manifatturiero',
     useCase: 'decisioni',
     outcome:
-      'AI advisor per buyer di supply chain: lead time medio ridotto del 12% in pilot di 6 mesi.',
+      'AI advisor for supply chain buyers: average lead time reduced by 12% in a 6-month pilot.',
     source: 'Mercedes-Benz supply chain report 2024',
   },
   {
@@ -84,7 +84,7 @@ export const BENCHMARKS: BenchmarkCase[] = [
     sector: 'fintech',
     useCase: 'sviluppo_software',
     outcome:
-      'Sviluppatori interni usano GPT-style assistant per ridurre tempo di debugging di sistemi distribuiti di ~25%.',
+      'Internal developers use GPT-style assistant to reduce distributed systems debugging time by ~25%.',
     source: 'Stripe engineering blog 2023',
   },
 ]

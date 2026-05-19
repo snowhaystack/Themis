@@ -9,14 +9,25 @@ import {
 import { indexSessionForUser } from '@/server/domain/identity/users'
 import {
   type DisambiguatorOutput,
+  type FreeTierCounter,
   type SessionRecord,
   SessionRecordSchema,
 } from '@/shared/types'
+import type { SupervisorCheck } from './supervisor'
 import { runAnalyzer } from './analyzer'
 import { runDecider } from './decider'
 import { runFormatter } from './formatter'
 import { evaluateAnalyzer, evaluateDecider, type EvalResult } from './evaluator'
+import {
+  checkDisambiguator,
+  checkAnalyzer,
+  checkDecider,
+  checkReport,
+  buildSupervisorReport,
+} from './supervisor'
 import { createUsageCollector } from '@/server/infrastructure/gemini/usage'
+
+const FREE_TIER_TOKEN_BUDGET = 1_500_000
 
 /**
  * Runs an agent, sanity-checks its output, and retries ONCE if the check
@@ -102,17 +113,39 @@ export async function createSession(
 
 export { deindexSession }
 
+function computeFreeTier(totalTokens: number, elapsedMs: number): FreeTierCounter {
+  const remaining = Math.max(0, FREE_TIER_TOKEN_BUDGET - totalTokens)
+  const elapsedHours = elapsedMs / 3_600_000
+  const tokensPerHour = elapsedHours > 0 ? totalTokens / elapsedHours : totalTokens
+  const hoursLeft = tokensPerHour > 0 ? remaining / tokensPerHour : 0
+  return {
+    totalTokensUsed: totalTokens,
+    freeTokenBudget: FREE_TIER_TOKEN_BUDGET,
+    estimatedFreeHoursLeft: Math.round(hoursLeft * 10) / 10,
+    tokensPerHourAvg: Math.round(tokensPerHour),
+    updatedAt: new Date().toISOString(),
+  }
+}
+
 export async function runPipeline(sessionId: string): Promise<void> {
   console.log(`[ORCH] start pipeline session=${sessionId}`)
   const start = Date.now()
   const collector = createUsageCollector()
+  const allChecks: SupervisorCheck[] = []
+
   try {
     const current = await loadSession(sessionId)
     if (!current || !current.disambiguator) {
-      throw new Error('Sessione non trovata o priva di disambiguator output')
+      throw new Error('Session not found or missing disambiguator output')
     }
     const disambiguator = current.disambiguator
 
+    // Supervisor: validate disambiguator input before pipeline starts
+    const disambChecks = checkDisambiguator(disambiguator)
+    allChecks.push(...disambChecks)
+    console.log(`[SUPERVISOR] disambiguator: ${disambChecks.filter(c => c.passed).length}/${disambChecks.length} passed`)
+
+    // AGENT 2: Analyzer — supervisor checks run in parallel with next agent
     await saveSession({ ...current, status: 'analyzing' })
     const analyzer = await runWithEval(
       'analyzer',
@@ -121,46 +154,71 @@ export async function runPipeline(sessionId: string): Promise<void> {
     )
     console.log(`[ORCH] analyzer done (${Date.now() - start}ms)`)
 
+    // Supervisor + Decider run in parallel
     let withAnalyzer = await loadSession(sessionId)
-    if (!withAnalyzer) throw new Error('Sessione persa durante analyze')
+    if (!withAnalyzer) throw new Error('Session lost during analyze phase')
     await saveSession({ ...withAnalyzer, status: 'deciding', analyzer })
-    const decider = await runWithEval(
-      'decider',
-      () => runDecider(disambiguator, analyzer, collector),
-      (out) => evaluateDecider(out)
-    )
+
+    const [decider, analyzerChecks] = await Promise.all([
+      runWithEval(
+        'decider',
+        () => runDecider(disambiguator, analyzer, collector),
+        (out) => evaluateDecider(out)
+      ),
+      Promise.resolve(checkAnalyzer(analyzer, disambiguator)),
+    ])
+    allChecks.push(...analyzerChecks)
+    console.log(`[SUPERVISOR] analyzer: ${analyzerChecks.filter(c => c.passed).length}/${analyzerChecks.length} passed`)
     console.log(`[ORCH] decider done (${Date.now() - start}ms)`)
 
+    // Supervisor + Formatter run in parallel
     let withDecider = await loadSession(sessionId)
-    if (!withDecider) throw new Error('Sessione persa durante decide')
+    if (!withDecider) throw new Error('Session lost during decide phase')
     await saveSession({ ...withDecider, status: 'formatting', analyzer, decider })
-    const report = await runFormatter(
-      { disambiguator, analyzer, decider },
-      collector
-    )
+
+    const [report, deciderChecks] = await Promise.all([
+      runFormatter({ disambiguator, analyzer, decider }, collector),
+      Promise.resolve(checkDecider(decider, analyzer, disambiguator)),
+    ])
+    allChecks.push(...deciderChecks)
+    console.log(`[SUPERVISOR] decider: ${deciderChecks.filter(c => c.passed).length}/${deciderChecks.length} passed`)
     console.log(`[ORCH] formatter done (${Date.now() - start}ms)`)
 
+    // Final supervisor check on the completed report
+    const reportChecks = checkReport(report, decider, analyzer)
+    allChecks.push(...reportChecks)
+    console.log(`[SUPERVISOR] report: ${reportChecks.filter(c => c.passed).length}/${reportChecks.length} passed`)
+
+    const supervisorReport = buildSupervisorReport(allChecks)
+    const usage = collector.summary()
+    const freeTier = computeFreeTier(usage.totals.total, Date.now() - start)
+
     let withReport = await loadSession(sessionId)
-    if (!withReport) throw new Error('Sessione persa durante format')
+    if (!withReport) throw new Error('Session lost during format phase')
     await saveSession({
       ...withReport,
       status: 'done',
       analyzer,
       decider,
       report,
-      pipelineUsage: collector.summary(),
+      pipelineUsage: usage,
+      supervisor: supervisorReport,
+      freeTier,
     })
     console.log(
-      `[ORCH] pipeline COMPLETE session=${sessionId} totale=${Date.now() - start}ms · ${
-        collector.summary().totals.total
-      } tokens`
+      `[ORCH] pipeline COMPLETE session=${sessionId} total=${Date.now() - start}ms · ${
+        usage.totals.total
+      } tokens · supervisor ${supervisorReport.score}%`
     )
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error(`[ORCH] pipeline ERROR session=${sessionId}: ${msg}`)
     const current = await loadSession(sessionId)
     if (current) {
-      await saveSession({ ...current, status: 'error', error: msg })
+      const supervisorReport = allChecks.length > 0
+        ? buildSupervisorReport(allChecks)
+        : undefined
+      await saveSession({ ...current, status: 'error', error: msg, supervisor: supervisorReport })
     }
   }
 }
