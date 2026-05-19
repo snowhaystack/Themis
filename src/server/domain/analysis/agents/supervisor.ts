@@ -3,6 +3,7 @@ import {
   type DeciderOutput,
   type DisambiguatorOutput,
   type FinalReport,
+  type PipelineUsage,
 } from '@/shared/types'
 import { MODEL_IDS } from '@/server/domain/analysis/data/catalog'
 import { carbonRating } from '@/server/domain/analysis/data/carbon'
@@ -288,6 +289,52 @@ export function checkReport(
       report.benchmarks.length >= 1
         ? `${report.benchmarks.length} benchmark case studies included`
         : 'No benchmark case studies — expected at least 1'
+    )
+  )
+
+  return checks
+}
+
+export function checkPipelineConsistency(
+  usage: PipelineUsage,
+  a: AnalyzerOutput
+): SupervisorCheck[] {
+  const checks: SupervisorCheck[] = []
+
+  const pipelineCarbonKg = (usage.totals.total / 1000) * 0.0003
+  const projectedAnnualKg = a.totals.annualCarbonKg
+
+  checks.push(
+    check(
+      'pipeline.carbonVsProjected',
+      pipelineCarbonKg < projectedAnnualKg,
+      pipelineCarbonKg < projectedAnnualKg
+        ? `Pipeline carbon (${pipelineCarbonKg.toFixed(4)} kg) is far below projected annual (${projectedAnnualKg.toFixed(1)} kg) — consistent`
+        : `Pipeline carbon (${pipelineCarbonKg.toFixed(4)} kg) exceeds projected annual (${projectedAnnualKg.toFixed(1)} kg) — inconsistent`
+    )
+  )
+
+  const entryTotalTokens = usage.entries.reduce((s, e) => s + e.usage.total, 0)
+  const tokenSumMatch = Math.abs(entryTotalTokens - usage.totals.total) <= 1
+  checks.push(
+    check(
+      'pipeline.tokenSumConsistency',
+      tokenSumMatch,
+      tokenSumMatch
+        ? `Token sum across agents (${entryTotalTokens.toLocaleString()}) matches pipeline total (${usage.totals.total.toLocaleString()})`
+        : `Token sum across agents (${entryTotalTokens.toLocaleString()}) doesn't match pipeline total (${usage.totals.total.toLocaleString()})`
+    )
+  )
+
+  const treeHours = pipelineCarbonKg / (21 / 365 / 24)
+  const treeMins = Math.round(treeHours * 60)
+  checks.push(
+    check(
+      'pipeline.treeTimeReasonable',
+      treeMins < 60 * 24,
+      treeMins < 60 * 24
+        ? `Tree compensation for pipeline: ${treeMins}m from ${usage.totals.total.toLocaleString()} tokens — reasonable`
+        : `Tree compensation for pipeline: ${treeMins}m — unexpectedly high for a single report generation`
     )
   )
 
