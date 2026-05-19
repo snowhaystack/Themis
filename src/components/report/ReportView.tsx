@@ -6,6 +6,8 @@ import type {
   DeciderOutput,
   DisambiguatorOutput,
   ReportSection,
+  SupervisorReport,
+  FreeTierCounter,
 } from '@/shared/types'
 import { StatsCard } from './StatsCard'
 import { CarbonHero } from './CarbonHero'
@@ -19,6 +21,8 @@ interface Props {
   analyzer: AnalyzerOutput
   decider: DeciderOutput
   disambiguator: DisambiguatorOutput
+  supervisor?: SupervisorReport
+  freeTier?: FreeTierCounter
 }
 
 const SIZE_LABEL: Record<DisambiguatorOutput['company']['size'], string> = {
@@ -159,6 +163,8 @@ export function ReportView({
   analyzer,
   decider,
   disambiguator,
+  supervisor,
+  freeTier,
 }: Props) {
   const company = disambiguator.company
   const handleDownloadPdf = () => {
@@ -253,6 +259,49 @@ export function ReportView({
           />
         </div>
       </section>
+
+      {/* Supervisor quality score + free-tier counter */}
+      {(supervisor || freeTier) && (
+        <section className="grid gap-4 sm:grid-cols-2">
+          {supervisor && (
+            <div className="card flex items-center gap-4">
+              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+                supervisor.score >= 80 ? 'bg-supervisor/15' : supervisor.score >= 50 ? 'bg-warning/15' : 'bg-danger/15'
+              }`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={
+                  supervisor.score >= 80 ? 'text-supervisor' : supervisor.score >= 50 ? 'text-warning' : 'text-danger'
+                }><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-2">Supervisor quality score</p>
+                <p className={`mt-1 font-display text-2xl font-semibold ${
+                  supervisor.score >= 80 ? 'text-supervisor' : supervisor.score >= 50 ? 'text-warning' : 'text-danger'
+                }`}>
+                  {supervisor.score}%
+                </p>
+                <p className="text-[11px] text-muted">{supervisor.passed} passed · {supervisor.failed} failed of {supervisor.checks.length} checks</p>
+              </div>
+            </div>
+          )}
+
+          {freeTier && (
+            <div className="card flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent/15">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-2">Free-tier activity remaining</p>
+                <p className="mt-1 font-display text-2xl font-semibold text-gradient">
+                  ~{freeTier.estimatedFreeHoursLeft}h
+                </p>
+                <p className="text-[11px] text-muted">
+                  {freeTier.totalTokensUsed.toLocaleString('en-US')} / {freeTier.freeTokenBudget.toLocaleString('en-US')} tokens used
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* CARBON HERO — focus of the report */}
       <CarbonHero analyzer={analyzer} rating={report.carbonRating} />
