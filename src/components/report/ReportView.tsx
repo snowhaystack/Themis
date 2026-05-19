@@ -32,6 +32,21 @@ const SIZE_LABEL: Record<DisambiguatorOutput['company']['size'], string> = {
   enterprise: 'Enterprise (250+)',
 }
 
+const SECTOR_LABEL: Record<string, string> = {
+  manifatturiero: 'Manufacturing',
+  fintech: 'Fintech',
+  retail: 'Retail',
+  sanitario: 'Healthcare',
+  education: 'Education',
+  servizi_professionali: 'Professional services',
+  logistica: 'Logistics',
+  energia_utilities: 'Energy / Utilities',
+  agritech: 'Agritech',
+  media_entertainment: 'Media / Entertainment',
+  pubblica_amministrazione: 'Public administration',
+  altro: 'Other',
+}
+
 function ProfileStat({
   label,
   value,
@@ -252,7 +267,7 @@ export function ReportView({
         <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <ProfileStat
             label="Sector"
-            value={humanize(company.sector)}
+            value={SECTOR_LABEL[company.sector] ?? humanize(company.sector)}
           />
           <ProfileStat
             label="Employees"
