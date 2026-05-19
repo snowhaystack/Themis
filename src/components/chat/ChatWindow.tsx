@@ -149,8 +149,10 @@ function formatHMS(ts: number): string {
 function treeHoursFromTokens(tokens: number): string {
   const carbonKg = (tokens / 1000) * 0.0003
   const treeHoursRaw = carbonKg / (21 / 365 / 24)
-  if (treeHoursRaw < 0.01) return '<0.01h'
-  if (treeHoursRaw < 1) return `${treeHoursRaw.toFixed(2)}h`
+  if (treeHoursRaw < 1) {
+    const mins = Math.max(1, Math.round(treeHoursRaw * 60))
+    return `${mins}m`
+  }
   return `${treeHoursRaw.toFixed(1)}h`
 }
 
