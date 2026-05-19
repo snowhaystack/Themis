@@ -88,7 +88,7 @@ async function callGemini<T>(args: {
     parsed = JSON.parse(cleaned)
   } catch (e) {
     const err = new Error(
-      `Risposta non è JSON valido. Errore parser: ${(e as Error).message}`
+      `Response is not valid JSON. Parser error: ${(e as Error).message}`
     )
     ;(err as { raw?: string }).raw = raw
     throw err
@@ -97,7 +97,7 @@ async function callGemini<T>(args: {
   const validated = schema.safeParse(parsed)
   if (!validated.success) {
     const err = new Error(
-      `JSON non conforme allo schema Zod. Errori: ${JSON.stringify(
+      `JSON does not conform to Zod schema. Errors: ${JSON.stringify(
         validated.error.flatten()
       )}`
     )
@@ -172,20 +172,20 @@ export async function generateJson<T>({
       if (raw) lastRaw = raw
 
       console.warn(
-        `[${label}] tentativo ${attempt + 1}/${maxRetries + 1} fallito (${
+        `[${label}] attempt ${attempt + 1}/${maxRetries + 1} failed (${
           transient ? 'transient' : 'parse/schema'
         }): ${msg}`
       )
       if (lastRaw && !transient) {
         console.warn(
-          `[${label}] raw response (primi 2000 char):\n${lastRaw.slice(0, 2000)}`
+          `[${label}] raw response (first 2000 chars):\n${lastRaw.slice(0, 2000)}`
         )
       }
 
       if (attempt >= maxRetries) {
         if (fallbackModel && fallbackModel !== currentModel) {
           console.warn(
-            `[${label}] passo al fallback model: ${fallbackModel}`
+            `[${label}] switching to fallback model: ${fallbackModel}`
           )
           try {
             const out = await callGemini({
@@ -208,7 +208,7 @@ export async function generateJson<T>({
           } catch (fbErr) {
             lastError = fbErr
             console.warn(
-              `[${label}] anche il fallback ${fallbackModel} ha fallito: ${
+              `[${label}] fallback ${fallbackModel} also failed: ${
                 fbErr instanceof Error ? fbErr.message : String(fbErr)
               }`
             )
@@ -220,17 +220,17 @@ export async function generateJson<T>({
       const backoffMs = transient
         ? 3000 * Math.pow(2, attempt)
         : 600 * Math.pow(2, attempt)
-      console.log(`[${label}] attesa ${backoffMs}ms prima del retry`)
+      console.log(`[${label}] waiting ${backoffMs}ms before retry`)
       await sleep(backoffMs)
 
       if (!transient && lastRaw) {
-        currentPrompt = `${prompt}\n\n---\nIl tentativo precedente ha prodotto un output non valido.\nERRORE: ${msg}\nOUTPUT PRECEDENTE (primi 1200 char):\n${lastRaw.slice(0, 1200)}\n\nRiprova restituendo SOLO JSON valido, con TUTTI i campi richiesti popolati. Niente markdown, niente backtick, niente testo extra.`
+        currentPrompt = `${prompt}\n\n---\nThe previous attempt produced invalid output.\nERROR: ${msg}\nPREVIOUS OUTPUT (first 1200 chars):\n${lastRaw.slice(0, 1200)}\n\nRetry returning ONLY valid JSON, with ALL required fields populated. No markdown, no backticks, no extra text.`
       }
     }
   }
 
   throw new Error(
-    `[${label}] generazione fallita dopo ${maxRetries + 1} tentativi: ${
+    `[${label}] generation failed after ${maxRetries + 1} attempts: ${
       lastError instanceof Error ? lastError.message : String(lastError)
     }`
   )
