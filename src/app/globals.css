@@ -358,17 +358,41 @@ html.light body {
   .bg-agent1, .bg-agent2, .bg-agent3, .bg-agent4 {
     background: #6d28d9 !important;
   }
-  /* Page break after each top-level section */
-  main > section {
+  /* Page-break control for clean multi-page PDF */
+  section {
     break-inside: avoid;
+  }
+  .grid {
+    break-inside: avoid;
+  }
+  table {
+    break-inside: avoid;
+  }
+  ul, ol {
+    break-inside: avoid;
+  }
+  h3 {
+    break-after: avoid;
+  }
+  /* Force page break before major report sections so they start on a fresh page */
+  .space-y-6 > section:nth-child(n+3) {
+    break-before: auto;
+  }
+  .space-y-6 > section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* Explicit page-break utility */
+  .print-page-break {
+    break-before: page !important;
   }
   /* Hide elements explicitly hidden in print */
   .no-print, .no-print\:hidden { display: none !important; }
   @page {
     size: A4;
-    margin: 0;
+    margin: 12mm 10mm;
   }
   body {
-    padding: 14mm 12mm !important;
+    padding: 0 !important;
   }
 }
