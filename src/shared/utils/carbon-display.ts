@@ -1,4 +1,4 @@
-/** Equivalenze per il report (umanizzano il dato CO2). */
+/** CO₂ equivalences for the report (humanise the carbon figure). */
 export function carbonEquivalents(annualKg: number): {
   kmAuto: number
   alberiAnno: number
