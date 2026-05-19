@@ -282,78 +282,6 @@ export function Sidebar({
           </div>
         </div>
 
-        {/* Agent pipeline — live status of the 5-agent run (supervisor + 4 agents) */}
-        <div className="px-4 pt-4">
-          <div className="pb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
-            Pipeline
-          </div>
-          <ol>
-            {PIPELINE_AGENTS.map((a, i) => {
-              const isSupervisor = a.n === 0
-              const state = isSupervisor
-                ? activeAgent == null
-                  ? 'pending'
-                  : activeAgent >= 1 && activeAgent <= 3
-                    ? 'active'
-                    : 'done'
-                : activeAgent == null
-                  ? 'pending'
-                  : a.n < activeAgent
-                    ? 'done'
-                    : a.n === activeAgent
-                      ? 'active'
-                      : 'pending'
-              const isLast = i === PIPELINE_AGENTS.length - 1
-              return (
-                <li key={a.n} className="flex gap-2.5">
-                  <div className="flex flex-col items-center">
-                    <span
-                      className={`relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold transition ${
-                        state === 'done'
-                          ? 'bg-success text-white'
-                          : state === 'active'
-                            ? `${a.bg} text-white shadow-glow-strong`
-                            : 'bg-surface-2 text-muted-2 ring-1 ring-border'
-                      }`}
-                    >
-                      {state === 'active' && (
-                        <span
-                          className={`absolute inset-0 animate-ping rounded-full ${a.bg} opacity-60`}
-                          aria-hidden="true"
-                        />
-                      )}
-                      {state === 'done' ? (
-                        '✓'
-                      ) : state === 'active' ? (
-                        <span className="relative h-1.5 w-1.5 rounded-full bg-white" />
-                      ) : isSupervisor ? (
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                      ) : (
-                        a.n
-                      )}
-                    </span>
-                    {!isLast && (
-                      <span className="sap-line-v my-1 h-4" aria-hidden="true" />
-                    )}
-                  </div>
-                  <div className="pb-2">
-                    <p
-                      className={`text-sm font-medium leading-6 ${
-                        state === 'pending' ? 'text-muted' : 'text-fg'
-                      }`}
-                    >
-                      {a.label}
-                    </p>
-                    <p className="text-[10px] leading-tight text-muted-2">
-                      {a.role}
-                    </p>
-                  </div>
-                </li>
-              )
-            })}
-          </ol>
-        </div>
-
         {/* List */}
         <div className="flex-1 overflow-hidden px-2 pt-3">
           <div className="px-2 pb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
@@ -431,6 +359,78 @@ export function Sidebar({
           </div>
         </div>
 
+        {/* Agent pipeline — live status of the 5-agent run (supervisor + 4 agents) */}
+        <div className="border-t border-border px-4 pt-3 pb-1">
+          <div className="pb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-2">
+            Pipeline
+          </div>
+          <ol>
+            {PIPELINE_AGENTS.map((a, i) => {
+              const isSupervisor = a.n === 0
+              const state = isSupervisor
+                ? activeAgent == null
+                  ? 'pending'
+                  : activeAgent >= 1 && activeAgent <= 3
+                    ? 'active'
+                    : 'done'
+                : activeAgent == null
+                  ? 'pending'
+                  : a.n < activeAgent
+                    ? 'done'
+                    : a.n === activeAgent
+                      ? 'active'
+                      : 'pending'
+              const isLast = i === PIPELINE_AGENTS.length - 1
+              return (
+                <li key={a.n} className="flex gap-2.5">
+                  <div className="flex flex-col items-center">
+                    <span
+                      className={`relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold transition ${
+                        state === 'done'
+                          ? 'bg-success text-white'
+                          : state === 'active'
+                            ? `${a.bg} text-white shadow-glow-strong`
+                            : 'bg-surface-2 text-muted-2 ring-1 ring-border'
+                      }`}
+                    >
+                      {state === 'active' && (
+                        <span
+                          className={`absolute inset-0 animate-ping rounded-full ${a.bg} opacity-60`}
+                          aria-hidden="true"
+                        />
+                      )}
+                      {state === 'done' ? (
+                        '✓'
+                      ) : state === 'active' ? (
+                        <span className="relative h-1.5 w-1.5 rounded-full bg-white" />
+                      ) : isSupervisor ? (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      ) : (
+                        a.n
+                      )}
+                    </span>
+                    {!isLast && (
+                      <span className="sap-line-v my-1 h-4" aria-hidden="true" />
+                    )}
+                  </div>
+                  <div className="pb-2">
+                    <p
+                      className={`text-sm font-medium leading-6 ${
+                        state === 'pending' ? 'text-muted' : 'text-fg'
+                      }`}
+                    >
+                      {a.label}
+                    </p>
+                    <p className="text-[10px] leading-tight text-muted-2">
+                      {a.role}
+                    </p>
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+        </div>
+
         {/* Footer — digital fingerprint awareness panel */}
         <div className="border-t border-border px-4 py-3">
           <div className="mb-2 flex items-center gap-1.5">
@@ -449,10 +449,8 @@ export function Sidebar({
               <NetRow label="ISP" value={net.isp} />
               <NetRow label="Timezone" value={net.timezone} />
               <NetRow label="Browser" value={net.browser} />
-              <NetRow label="Engine" value={net.engine} />
               <NetRow label="OS" value={net.os} />
               <NetRow label="Device" value={net.device} />
-              <NetRow label="Platform" value={net.screenHint} />
               <NetRow label="Language" value={net.lang} />
               <div className="pt-1.5">
                 <p className="text-[9px] leading-relaxed text-danger/60">
