@@ -112,7 +112,9 @@ export function Sidebar({
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [net, setNet] = useState<WhoAmI | null>(null)
-  const [panel, setPanel] = useState<'history' | 'pipeline'>('pipeline')
+  const [panel, setPanel] = useState<'history' | 'pipeline'>(
+    pathname?.startsWith('/report') ? 'history' : 'pipeline'
+  )
 
   const hasActive = sessions.some((s) =>
     ['analyzing', 'deciding', 'formatting'].includes(s.status)
