@@ -122,8 +122,8 @@ export function CarbonHero({ analyzer, rating }: Props) {
           />
           <Equivalence
             icon="🌲"
-            value={formatCount(eq.alberiAnno, 'trees')}
-            unit="trees to plant to offset it"
+            value={eq.alberiAnno < 1 ? '1' : formatCount(eq.alberiAnno, 'trees')}
+            unit={eq.alberiAnno < 1 ? 'tree — planting one is always good for the planet' : 'trees to plant to offset it'}
           />
           <Equivalence
             icon="📱"
